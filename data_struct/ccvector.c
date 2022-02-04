@@ -23,6 +23,8 @@ int VecCreate(CC_VECTOR** Vector)
         return -1;
     }
 
+
+    // Can we use memset?
     memset(vec, 0, sizeof(*vec));
 
     vec->Count = 0;
@@ -69,15 +71,18 @@ int VecInsertTail(CC_VECTOR* Vector, int Value)
         return -1;
     }
 
-    if (Vector->Count >= Vector->Size)
+    // If vector memory is maxed
+    if (Vector->Count + 1 == Vector->Size)
     {
         /// REALLOC
         /// Use an aux to store the vector pointer
-        aux = realloc(Vector->Array, Vector->Count * sizeof(int));
+        /// Allow an additonal 100 slots every time array exceeds size.
+        aux = realloc(Vector->Array, (Vector->Count + 100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
-            printf("Realloc succesful");
+//           printf("Realloc succesful");
+            Vector->Size += 100;
         }
         else
         {
@@ -85,8 +90,7 @@ int VecInsertTail(CC_VECTOR* Vector, int Value)
         }
     }
 
-    Vector->Array[Vector->Count] = Value;
-    Vector->Count++;
+    Vector->Array[Vector->Count++] = Value;
 
     return 0;
 }
@@ -103,25 +107,28 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
         return -1;
     }
 
-    if (Vector->Count >= Vector->Size)
+    if (Vector->Count + 1 >= Vector->Size)
     {
         /// REALLOC
         /// Use an aux to store the vector pointer
-        aux = realloc(Vector->Array, Vector->Count * sizeof(int));
+        aux = realloc(Vector->Array, Vector->Count+100 * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
-            printf("Realloc succesful");
+            //printf("Realloc succesful");
+            Vector->Size+=100;
         }
         else
         {
+            printf("Alloc failed..sad");
             return -1;
-
         }
     }
-    for (int i = Vector->Count - 1; i >= 0; i--)
+
+    // This is not okay, when vector size increases a lot, it will override the last element.. Implement it differently omg how dumb
+    for (int i = Vector->Count; i > 0; i--)
     {
-        Vector->Array[i + 1] = Vector->Array[i];
+        Vector->Array[i] = Vector->Array[i-1];
     }
 
     Vector->Array[0] = Value;
@@ -147,16 +154,16 @@ int VecInsertAfterIndex(CC_VECTOR* Vector, int Index, int Value) // This functio
     {
         /// REALLOC
         /// Use an aux to store the vector pointer
-        aux = realloc(Vector->Array, Vector->Count * sizeof(int));
+        aux = realloc(Vector->Array + 1, Vector->Count * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
             printf("Realloc succesful");
+            Vector->Size++;
         }
         else
         {
             return -1;
-
         }
     }
 
@@ -242,7 +249,7 @@ int VecClear(CC_VECTOR* Vector)
         return -1; // Nothing to clear
     }
 
-
+    // Question : Can we use memset?
     memset(Vector->Array, 0, Vector->Count * sizeof(int));
 
 
@@ -271,6 +278,7 @@ int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) // Needs to be tested
     CC_UNREFERENCED_PARAMETER(SrcVector);
 
     int* aux = NULL;
+    // int* offset = NULL;
 
     if (NULL == DestVector || NULL == SrcVector)
     {
@@ -283,15 +291,53 @@ int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) // Needs to be tested
     // Realloc error check
     if (NULL == aux)
     {
+        DestVector->Array;
         return -1;
     }
+
+    // offset = DestVector->Array + sizeof(int) * DestVector->Count;
 
     // SrcVector will be appended to DestVector
     // First parameter is the destination zone : A pointer to the end of the destination array
     // Second parameter is the source memory area, i.e. a pointer to the first element of the source array.
     // Third parameter is the number of bytes to be copied -> the number of ints in the source array 
-    memcpy(DestVector->Array + sizeof(int) * DestVector->Count, SrcVector->Array, sizeof(int) * SrcVector->Count);
+    // memcpy(offset, SrcVector->Array, sizeof(int) * SrcVector->Count); Ofc this doesnt work...
 
+    for (int i = DestVector->Count; i < DestVector->Count + SrcVector->Count; i++) 
+    {
+        DestVector->Array[i] = SrcVector->Array[i - DestVector->Count];
+    }
+    
+
+    // Update count idx
+    DestVector->Count += SrcVector->Count;
+
+
+    return 0;
+}
+
+int VecPrint(CC_VECTOR* Vector)
+{
+    CC_UNREFERENCED_PARAMETER(Vector);
+    
+    if (NULL == Vector)
+    {
+        return -1;
+    }
+
+    printf("Vector is: ");
+
+    if (!Vector->Count)
+    {
+        printf("Empty vector.");
+    }
+
+    for (int i = 0; i < Vector->Count; i++)
+    {
+        printf("%d ", Vector->Array[i]);
+    }
+
+    putchar(10); // Put a newline after the print
 
     return 0;
 }

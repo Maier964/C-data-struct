@@ -1,9 +1,9 @@
 #pragma once
+#include "ccvector.h"
 
 typedef struct _CC_STACK{
-    // Members
-    int PlaceHolder; // placeholder to be removed when actual implementation is added
-} CC_STACK;
+    PCC_VECTOR Vector;
+} CC_STACK, *PCC_STACK;
 
 int StCreate(CC_STACK **Stack);
 int StDestroy(CC_STACK **Stack);

@@ -4,7 +4,7 @@ typedef struct _CC_VECTOR {
     int *Array;
     int Size;
     int Count;
-} CC_VECTOR;
+} CC_VECTOR, *PCC_VECTOR;
 
 int VecCreate(CC_VECTOR **Vector);
 int VecDestroy(CC_VECTOR **Vector);
@@ -24,3 +24,6 @@ int VecSort(CC_VECTOR *Vector);
 
 // Appends all the elements in DestVector to SrcVector
 int VecAppend(CC_VECTOR *DestVector, CC_VECTOR *SrcVector);
+
+// Prints the vector
+int VecPrint(CC_VECTOR* Vector);

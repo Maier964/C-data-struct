@@ -11,11 +11,22 @@ int TestHashTable();
 int TestHeap();
 int TestTree();
 
+
+// Custom tests
+int CustomVectorTest();
+
 void RunTests();
 
 int main(void)
 {
-    RunTests();
+    //RunTests();
+    // Vector almost ok - need to implement quicksort
+
+    //TestVector();
+
+    CustomVectorTest();
+
+    //TestStack();
     return 0;
 }
 
@@ -310,12 +321,16 @@ int TestVector()
         goto cleanup;
     }
 
+    VecPrint(usedVector);
+
     retVal = VecInsertTail(usedVector, 10);
     if (0 != retVal)
     {
         printf("VecInsertTail failed!\n");
         goto cleanup;
     }
+
+    VecPrint(usedVector);
 
     retVal = VecInsertHead(usedVector, 16);
     if (0 != retVal)
@@ -324,12 +339,16 @@ int TestVector()
         goto cleanup;
     }
 
+    VecPrint(usedVector);
+
     if (VecGetCount(usedVector) != 2)
     {
         printf("Invalid count returned!\n");
         retVal = -1;
         goto cleanup;
     }
+
+    VecPrint(usedVector);
 
     retVal = VecInsertAfterIndex(usedVector, 0, 20);
     if (0 != retVal)
@@ -338,12 +357,16 @@ int TestVector()
         goto cleanup;
     }
 
+    VecPrint(usedVector);
+
     retVal = VecRemoveByIndex(usedVector, 0);
     if (0 != retVal)
     {
         printf("VecRemoveByIndex failed!\n");
         goto cleanup;
     }
+
+    VecPrint(usedVector);
 
     retVal = VecGetValueByIndex(usedVector, 0, &foundVal);
     if (0 != retVal)
@@ -352,12 +375,16 @@ int TestVector()
         goto cleanup;
     }
 
+    VecPrint(usedVector);
+
     if (foundVal != 20)
     {
         printf("Invalid value found at position 0\n");
         retVal = -1;
         goto cleanup;
     }
+
+    VecPrint(usedVector);
 
     retVal = VecClear(usedVector);
     if (0 != retVal)
@@ -366,12 +393,16 @@ int TestVector()
         goto cleanup;
     }
 
+    VecPrint(usedVector);
+
     if (0 != VecGetCount(usedVector))
     {
         printf("Invalid count after clear\n");
         retVal = -1;
         goto cleanup;
     }
+
+    VecPrint(usedVector);
 
 cleanup:
     if (NULL != usedVector)
@@ -383,4 +414,28 @@ cleanup:
         }
     }
     return retVal;
+}
+
+
+int CustomVectorTest()
+{
+    CC_VECTOR* test = NULL;
+
+    VecCreate(&test);
+
+
+    for (int i = 0; i < 200; i++)
+    {
+        printf("%d", i);
+        VecInsertHead(test, i);
+    }
+  
+
+    printf("%d %d\n", test->Size, test->Count);
+    VecPrint(test);
+
+
+    VecDestroy(&test);
+
+    return 0;
 }
