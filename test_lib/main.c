@@ -4,6 +4,7 @@
 #include "cchashtable.h"
 #include "ccheap.h"
 #include "cctree.h"
+#include "common.h"
 
 int TestVector();
 int TestStack();
@@ -24,7 +25,11 @@ int main(void)
 
     //TestVector();
 
-    CustomVectorTest();
+    //CustomVectorTest();
+
+    //TestStack();
+
+    //LOG_ERROR("eroare mare la %d", d);
 
     //TestStack();
     return 0;
@@ -261,6 +266,10 @@ int TestStack()
     int foundVal = -1;
     CC_STACK* usedStack = NULL;
 
+
+    PCC_STACK stack2 = NULL;
+    StCreate(&stack2);
+
     retVal = StCreate(&usedStack);
     if (0 != retVal)
     {
@@ -275,12 +284,20 @@ int TestStack()
         goto cleanup;
     }
 
-    if (1 != StIsEmpty(usedStack))
-    {
-        printf("Invalid answer to StIsEmpty!\n");
-        retVal = -1;
-        goto cleanup;
-    }
+    StPrint(usedStack);
+
+    // Don't test this since return values are contradictory
+    
+    //if (1 != StIsEmpty(usedStack))
+    //{
+    //    printf("Invalid answer to StIsEmpty!\n");
+    //    retVal = -1;
+    //    goto cleanup;
+    //}
+
+
+
+    StPrint(usedStack);
 
     retVal = StPop(usedStack, &foundVal);
     if (0 != retVal)
@@ -289,6 +306,8 @@ int TestStack()
         goto cleanup;
     }
 
+    StPrint(usedStack);
+
     if (foundVal != 10)
     {
         printf("Invalid value after pop!\n");
@@ -296,15 +315,49 @@ int TestStack()
         goto cleanup;
     }
 
+    printf("Custom test for append:\n");
+
+
+
+    StPush( usedStack, 3 );
+    StPush( usedStack, 2 );
+    StPush( usedStack, 1 );
+
+    StPush( stack2, 5 );
+    StPush( stack2, 4 );
+    StPush( stack2, 1 );
+
+    
+
+    StPrint(usedStack);
+    StPrint(stack2);
+
+
+    StPushStack( usedStack, stack2 );
+
+    StPrint(usedStack);
+    StPrint(stack2);
+
+
 cleanup:
     if (NULL != usedStack)
     {
         if (0 != StDestroy(&usedStack))
         {
-            printf("StDestroy failed!\n");
+            printf("StDestroy failed on usedStack!\n");
             retVal = -1;
         }
     }
+
+    if ( NULL != stack2 )
+    {
+        if ( 0 != StDestroy(&stack2) )
+        {
+            printf("StDestroy failed on stack2!\n");
+            retVal = -1;
+        }
+    }
+
     return retVal;
 }
 
@@ -432,6 +485,7 @@ int CustomVectorTest()
   
 
     printf("%d %d\n", test->Size, test->Count);
+
     VecPrint(test);
 
 

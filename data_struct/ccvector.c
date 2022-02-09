@@ -109,9 +109,9 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
 
     if (Vector->Count + 1 >= Vector->Size)
     {
-        /// REALLOC
+        /// REALLOC (Add another 100 elements to the vector)
         /// Use an aux to store the vector pointer
-        aux = realloc(Vector->Array, Vector->Count+100 * sizeof(int));
+        aux = realloc(Vector->Array, (Vector->Count+100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
@@ -120,19 +120,18 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
         }
         else
         {
-            printf("Alloc failed..sad");
+            printf("Realloc failed.\n");
             return -1;
         }
     }
 
     // This is not okay, when vector size increases a lot, it will override the last element.. Implement it differently omg how dumb
-    for (int i = Vector->Count; i > 0; i--)
+    for (int i = ++Vector->Count; i > 0; i--)
     {
         Vector->Array[i] = Vector->Array[i-1];
     }
 
     Vector->Array[0] = Value;
-    Vector->Count++;
 
     return 0;
 }
@@ -219,6 +218,12 @@ int VecGetValueByIndex(CC_VECTOR* Vector, int Index, int* Value)
 
 
     if (NULL == Vector)
+    {
+        return -1;
+    }
+
+    // Index out of bounds
+    if ( Vector->Count < Index )
     {
         return -1;
     }

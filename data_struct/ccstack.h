@@ -33,3 +33,6 @@ int StClear(CC_STACK *Stack);
 // After push: Stack1: 1, 2, 3, 1, 4, 5
 //             Stack2: empty
 int StPushStack(CC_STACK *Stack, CC_STACK *StackToPush);
+
+
+void StPrint( CC_STACK* Stack );
