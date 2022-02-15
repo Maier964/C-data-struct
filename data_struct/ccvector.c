@@ -274,7 +274,9 @@ int VecSort(CC_VECTOR* Vector)
 
     // Implement QuickSort
 
-    return -1;
+    QuickSort(Vector->Array, 0, Vector->Count - 1);
+
+    return 0;
 }
 
 int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) // Needs to be tested

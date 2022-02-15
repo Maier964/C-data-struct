@@ -1,15 +1,25 @@
 #pragma once
+#include "stdint.h"
+
+typedef int (*PCC_HASH_TABLE_FUNCTION)( char );
+
+typedef struct _CC_HASH_ITEM{
+    char* Key;
+    uint32_t HopInfo;
+} CC_HASH_ITEM, *PCC_HASH_ITEM;
 
 typedef struct _CC_HASH_TABLE {
-    // Members
-    int PlaceHolder; // placeholder to be removed when actual implementation is added
-} CC_HASH_TABLE;
+    CC_HASH_ITEM* Buckets;
+    int Count;
+    int Size;
+    PCC_HASH_TABLE_FUNCTION HashFunction;
+} CC_HASH_TABLE, *PCC_HASH_TABLE;
 
 typedef struct _CC_HASH_TABLE_ITERATOR
 {
     CC_HASH_TABLE *HashTable; // set by call to HtGetFirstKey
-    // Other Member
 } CC_HASH_TABLE_ITERATOR;
+
 
 int HtCreate(CC_HASH_TABLE **HashTable);
 int HtDestroy(CC_HASH_TABLE **HashTable);
@@ -51,3 +61,5 @@ int HtClear(CC_HASH_TABLE *HashTable);
 
 // Returns the number of keys in the HashTable, or -1 in case of error
 int HtGetKeyCount(CC_HASH_TABLE *HashTable);
+
+int HashDefaultFunction(char);

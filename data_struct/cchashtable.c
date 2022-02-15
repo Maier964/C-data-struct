@@ -2,16 +2,75 @@
 #include "cchashtable.h"
 #include "common.h"
 
+
+#define INITIAL_SIZE (int)1e+8
+
+// Hopscotch Hashing
+#define H 32
+
+int HashDefaultFunction( char Value )
+{
+    int val = 0;
+    
+    uint16_t desired = (uint16_t)Value;
+
+    do{
+        desired ^= desired >> 7;
+        desired ^= desired << 9;
+        desired ^= desired >> 13;
+        
+        val++;
+    }while( desired != ((uint16_t)Value ^ 0xAB1Cu) );
+
+    return val % INITIAL_SIZE;
+}
+
 int HtCreate(CC_HASH_TABLE **HashTable)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
-    return -1;
+
+    PCC_HASH_TABLE hashTableTemplate = NULL;
+
+    if ( HashTable == NULL )
+    {
+        return -1;
+    }
+
+    hashTableTemplate = (PCC_HASH_TABLE)malloc(sizeof(CC_HASH_TABLE));
+
+    hashTableTemplate->Buckets = (CC_HASH_ITEM*)malloc(INITIAL_SIZE * sizeof(CC_HASH_ITEM));
+
+    // Hope this works
+    memset( hashTableTemplate->Buckets, 0, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+
+    hashTableTemplate->Count = 0;
+
+    hashTableTemplate->Size = INITIAL_SIZE;
+
+    hashTableTemplate->HashFunction = HashDefaultFunction;
+
+    *HashTable = hashTableTemplate;
+
+    return 0;
 }
 
 int HtDestroy(CC_HASH_TABLE **HashTable)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
-    return -1;
+
+    if ( NULL == HashTable )
+    {
+        return -1;
+    }
+
+    PCC_HASH_TABLE temp = *HashTable;
+
+    free(temp->Buckets);
+    free(temp->HashFunction);
+
+    free(temp);
+
+    return 0;
 }
 
 int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
@@ -19,9 +78,18 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
     CC_UNREFERENCED_PARAMETER(HashTable);
     CC_UNREFERENCED_PARAMETER(Key);
     CC_UNREFERENCED_PARAMETER(Value);
-    return -1;
+
+    if ( NULL == HashTable || NULL == Key || NULL == Value )
+    {
+        return -1;
+    }
+
+    if ( HashTable->Buckets[ HashTable->HashFunction( HashTable->Buckets->Key ) ] = )
+
+    return 0;
 }
 
+// Lookup is a bit tricky, I didn't quite get it
 int HtGetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int *Value)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
@@ -97,11 +165,27 @@ int HtReleaseIterator(CC_HASH_TABLE_ITERATOR **Iterator)
 int HtClear(CC_HASH_TABLE *HashTable)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
-    return -1;
+
+    if ( NULL == HashTable )
+    {
+        return -1;
+    }
+
+    free(HashTable->Buckets);
+
+    HashTable->Buckets = (char*)malloc( INITIAL_SIZE * sizeof(char) );
+
+    return 0;
 }
 
 int HtGetKeyCount(CC_HASH_TABLE *HashTable)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
-    return -1;
+
+    if ( NULL == HashTable )
+    {
+        return -1;
+    }
+
+    return HashTable->Count;
 }

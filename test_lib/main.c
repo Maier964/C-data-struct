@@ -5,6 +5,7 @@
 #include "ccheap.h"
 #include "cctree.h"
 #include "common.h"
+#include "stdint.h"
 
 int TestVector();
 int TestStack();
@@ -18,21 +19,21 @@ int CustomVectorTest();
 
 void RunTests();
 
+
 int main(void)
 {
     //RunTests();
-    // Vector almost ok - need to implement quicksort
-
+    
     //TestVector();
 
-    //CustomVectorTest();
+//    CustomVectorTest();
 
-    //TestStack();
+    char* alpha = "abcdefghijklmnopqwe123SD";
 
-    //LOG_ERROR("eroare mare la %d", d);
+    for (int i = 0; i < 24; i++)
+        printf("%d ", HashDefaultFunction(alpha[i]));
 
-    //TestStack();
-    return 0;
+     return 0;
 }
 
 void RunTests()
@@ -477,14 +478,24 @@ int CustomVectorTest()
     VecCreate(&test);
 
 
-    for (int i = 0; i < 200; i++)
-    {
-        printf("%d", i);
-        VecInsertHead(test, i);
-    }
-  
+    VecInsertHead(test, 6);
 
-    printf("%d %d\n", test->Size, test->Count);
+    VecInsertHead(test, 50);
+
+    VecInsertHead(test, 21);
+
+    VecInsertHead(test, 100);
+
+    VecInsertHead(test, 82);
+
+    VecInsertHead(test, 8);
+
+    VecInsertHead(test, 2);
+
+
+    VecPrint(test);
+
+    VecSort(test);
 
     VecPrint(test);
 
