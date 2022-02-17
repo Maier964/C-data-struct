@@ -5,22 +5,21 @@
 
 #define INITIAL_SIZE (int)1e+8
 
-// Hopscotch Hashing
+// Hopscotch Hashing using cache-friendly neighbourhood bucket fetching
 #define H 32
 
-int HashDefaultFunction( char Value )
+int HashDefaultFunction( char* Key )
 {
     int val = 0;
     
-    uint16_t desired = (uint16_t)Value;
+    uint32_t desired = (int32_t)Key;
 
     do{
         desired ^= desired >> 7;
         desired ^= desired << 9;
         desired ^= desired >> 13;
-        
         val++;
-    }while( desired != ((uint16_t)Value ^ 0xAB1Cu) );
+    }while( desired != ((int32_t)Key ^ 0xAB1Cu) );
 
     return val % INITIAL_SIZE;
 }
@@ -66,7 +65,7 @@ int HtDestroy(CC_HASH_TABLE **HashTable)
     PCC_HASH_TABLE temp = *HashTable;
 
     free(temp->Buckets);
-    free(temp->HashFunction);
+ //   free(temp->HashFunction);
 
     free(temp);
 
@@ -79,12 +78,16 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
     CC_UNREFERENCED_PARAMETER(Key);
     CC_UNREFERENCED_PARAMETER(Value);
 
-    if ( NULL == HashTable || NULL == Key || NULL == Value )
+    if ( NULL == HashTable || NULL == Key )
     {
         return -1;
     }
 
-    if ( HashTable->Buckets[ HashTable->HashFunction( HashTable->Buckets->Key ) ] = )
+    // Position is empty in hashtable
+    if ( HashTable->Buckets[ HashTable->HashFunction( HashTable->Buckets->Key ) ].Key )
+    {
+
+    }
 
     return 0;
 }
@@ -173,7 +176,7 @@ int HtClear(CC_HASH_TABLE *HashTable)
 
     free(HashTable->Buckets);
 
-    HashTable->Buckets = (char*)malloc( INITIAL_SIZE * sizeof(char) );
+    HashTable->Buckets = (CC_HASH_ITEM*)malloc( INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
 
     return 0;
 }

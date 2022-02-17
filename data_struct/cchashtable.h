@@ -1,7 +1,7 @@
 #pragma once
 #include "stdint.h"
 
-typedef int (*PCC_HASH_TABLE_FUNCTION)( char );
+typedef int (*PCC_HASH_TABLE_FUNCTION)( char* );
 
 typedef struct _CC_HASH_ITEM{
     char* Key;
@@ -62,4 +62,5 @@ int HtClear(CC_HASH_TABLE *HashTable);
 // Returns the number of keys in the HashTable, or -1 in case of error
 int HtGetKeyCount(CC_HASH_TABLE *HashTable);
 
-int HashDefaultFunction(char);
+
+int HashDefaultFunction( char* Key );

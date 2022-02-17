@@ -16,6 +16,7 @@ int TestTree();
 
 // Custom tests
 int CustomVectorTest();
+int CustomTreeTest();
 
 void RunTests();
 
@@ -28,10 +29,12 @@ int main(void)
 
 //    CustomVectorTest();
 
-    char* alpha = "abcdefghijklmnopqwe123SD";
+//    char* alpha = "abcdefghijklmnopqwe123SD";
 
-    for (int i = 0; i < 24; i++)
-        printf("%d ", HashDefaultFunction(alpha[i]));
+//    for (int i = 0; i < 24; i++)
+//        printf("%d ", HashDefaultFunction(alpha[i]));
+
+    CustomTreeTest();
 
      return 0;
 }
@@ -501,6 +504,33 @@ int CustomVectorTest()
 
 
     VecDestroy(&test);
+
+    return 0;
+}
+
+
+int CustomTreeTest()
+{
+    CC_TREE* usedTree = NULL;
+
+    int aux[] = {12,1,110,92,2,16,1,1};
+
+    TreeCreate( &usedTree );
+
+   
+
+    for ( int i = 0; i < 7; i++)
+    {
+        TreeInsert( usedTree, aux[i] );
+        TreePrint( usedTree->Head );
+        putchar(10);
+        printf(" Step %d done.. \n\n ", i);
+    }
+
+    TreeRemove(usedTree, 12);
+
+
+    TreePrint(usedTree->Head);
 
     return 0;
 }

@@ -17,8 +17,8 @@ void Swap(int* Value1, int* Value2)
 
 
 // Generator de numere pseudo-aleatoare
-// Nu merge.
-int RandomNumberGenerator(int MinVal, int MaxVal)
+// Accepta un sir de caractere ca seed.
+int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength)
 {
     if (MinVal > MaxVal)
     {
@@ -27,9 +27,14 @@ int RandomNumberGenerator(int MinVal, int MaxVal)
 
     int result = 0;
 
+    // Orice valoare diferita de 0 este valida pentru generare
     uint16_t seed = 0xD011u;
 
-    uint16_t random = seed; // Linear Feedback shift register ( Metoda Xorshift )
+    for ( int i = 0; i < SeedLength; i++ )
+        seed ^=  (uint8_t)Seed[i];
+    
+    // Initializam un Linear Feedback shit register pe 16 biti cu metoda Xorshift
+    uint16_t random = seed;
 
     do
     {

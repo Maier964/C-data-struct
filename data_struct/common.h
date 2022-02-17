@@ -22,4 +22,4 @@ int Partition( int* Memory, int Left, int Right);
 // Template memory interchange
 void Swap( int* Value1, int* Value2 );
 
-int RandomNumberGenerator(int MinVal, int MaxVal);
+int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength);
