@@ -23,3 +23,8 @@ int Partition( int* Memory, int Left, int Right);
 void Swap( int* Value1, int* Value2 );
 
 int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength);
+
+// Do it inline... otherwise do it in a macro
+int Max(int, int);
+
+void CustomMemcpy( void*, void*, size_t );

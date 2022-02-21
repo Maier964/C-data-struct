@@ -1,7 +1,6 @@
 #include "ccvector.h"
 #include "common.h"
-#include "string.h"
-#include "stdio.h" // Delete this
+#include <string.h> // for memset
 
 #define INITIAL_SIZE    100
 

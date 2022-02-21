@@ -17,6 +17,7 @@ int TestTree();
 // Custom tests
 int CustomVectorTest();
 int CustomTreeTest();
+int CustomHeapTest();
 
 void RunTests();
 
@@ -34,9 +35,14 @@ int main(void)
 //    for (int i = 0; i < 24; i++)
 //        printf("%d ", HashDefaultFunction(alpha[i]));
 
-    CustomTreeTest();
+//    CustomTreeTest();
 
-     return 0;
+//    printf(" %d ", Max(12, 14));
+
+    CustomHeapTest();
+
+
+    return 0;
 }
 
 void RunTests()
@@ -513,7 +519,7 @@ int CustomTreeTest()
 {
     CC_TREE* usedTree = NULL;
 
-    int aux[] = {12,1,110,92,2,16,1,1};
+    int aux[] = {12,1,110,92,2,16,1,200};
 
     TreeCreate( &usedTree );
 
@@ -522,15 +528,64 @@ int CustomTreeTest()
     for ( int i = 0; i < 7; i++)
     {
         TreeInsert( usedTree, aux[i] );
-        TreePrint( usedTree->Head );
+//        TreePrint( usedTree->Head );
         putchar(10);
-        printf(" Step %d done.. \n\n ", i);
+//        printf(" Step %d done.. \n\n ", i);
     }
 
     TreeRemove(usedTree, 12);
 
+    TreeInsert(usedTree, 300);
+
+//    TreePrint(usedTree->Head);
+
+    TreeGetHeight(usedTree);
+
+//    printf(" Height: %d ", usedTree->Height);
+
+    TreeClear(usedTree);
 
     TreePrint(usedTree->Head);
+
+
+    return 0;
+}
+
+
+int CustomHeapTest()
+{
+    CC_HEAP* usedHeap = NULL;
+
+    CC_VECTOR* test = NULL;
+
+    // Vector part
+
+    VecCreate(&test);
+
+
+    VecInsertHead(test, 6);
+
+    VecInsertHead(test, 50);
+
+    VecInsertHead(test, 21);
+
+    VecInsertHead(test, 100);
+
+    VecInsertHead(test, 82);
+
+    VecInsertHead(test, 82);
+
+    VecInsertHead(test, 2);
+
+    // End of vector part
+
+    HpCreateMaxHeap(&usedHeap, test);
+
+    VecPrint(usedHeap->Elements);
+
+    HpSortToVector(usedHeap, test);
+
+    VecPrint(test);
 
     return 0;
 }

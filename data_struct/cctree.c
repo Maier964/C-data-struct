@@ -7,10 +7,6 @@
 #define BLACK 0
 #define RED 1
 
-// delete this after debug
-#define nodeRotateIterator y
-#define nodeAux x
-#define nodeToBeDel z
 
 int TreeCreate(CC_TREE **Tree)
 {
@@ -24,6 +20,7 @@ int TreeCreate(CC_TREE **Tree)
     PCC_TREE treeTemplate = (PCC_TREE) malloc( sizeof( CC_TREE ) );
 
     treeTemplate->Head = NULL;
+    treeTemplate->Count = 0;
 
     *Tree = treeTemplate;
 
@@ -34,7 +31,19 @@ int TreeCreate(CC_TREE **Tree)
 int TreeDestroy(CC_TREE **Tree)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
-    return -1;
+
+    if (NULL == Tree)
+    {
+        return -1;
+    }
+
+    TreeClear(*Tree);
+
+    free(Tree);
+
+    Tree = NULL;
+
+    return 0;
 }
 
 int TreeInsert(CC_TREE *Tree, int Value)
@@ -93,6 +102,8 @@ int TreeInsert(CC_TREE *Tree, int Value)
 
     TreeAdjustColourInsert(Tree, node);
 
+    Tree->Count++;
+
     return 0;
 }
 
@@ -105,7 +116,7 @@ int TreeRemove(CC_TREE *Tree, int Value)
     CC_UNREFERENCED_PARAMETER(Value);
 
     PNODE nodeToBeDel = NULL;
-    PNODE nodeRotateIterator = NULL;
+    PNODE nodeDeleteIterator = NULL;
     PNODE nodeAux = NULL;
 
     if ( TreeGetNode( Tree, Value, &nodeToBeDel ) != 1 )
@@ -115,54 +126,61 @@ int TreeRemove(CC_TREE *Tree, int Value)
     }
 
     // nodeToBeDel is assigned
+    start:
 
-    nodeRotateIterator = nodeToBeDel;
+    nodeDeleteIterator = nodeToBeDel;
 
-    bool originalColour = nodeRotateIterator->Colour;
+    bool originalColour = nodeDeleteIterator->Colour;
 
-    if ( nodeToBeDel->Left == NULL ) // Has at least one child
+    // Is a leaf or has some right childs. In both cases, TreeReplaceSubtree does the job of interchanging the two nodes
+    // We are sure of the fact that if a node has no left child, it will have only one right child, because otherwise the tree is not balanced anymore.
+    if ( nodeToBeDel->Left == NULL ) 
     {
         nodeAux = nodeToBeDel->Right;
         TreeReplaceSubtree( Tree, nodeToBeDel, nodeToBeDel->Right );
     }
     else
     {
-        if ( nodeToBeDel->Right == NULL ) // Has two children
+        if ( nodeToBeDel->Right == NULL ) // Has only a left child
         {
             nodeAux = nodeToBeDel->Left;
             TreeReplaceSubtree( Tree, nodeToBeDel, nodeToBeDel->Left );
         }
         else{
-            
-            TreePredecesor( nodeToBeDel->Right, &nodeRotateIterator);
-            originalColour = nodeRotateIterator->Colour;
+            // Has both children
+            TreePredecesor( nodeToBeDel->Right, &nodeDeleteIterator);
+            originalColour = nodeDeleteIterator->Colour;
 
-            nodeAux = nodeRotateIterator->Right;
+            nodeAux = nodeDeleteIterator->Right;
 
 
-            if ( nodeAux != NULL && nodeRotateIterator->Parent == nodeToBeDel ) // Here everything crashes...
+            if ( nodeDeleteIterator->Parent != nodeToBeDel ) 
             {
-                nodeAux->Parent = nodeRotateIterator;
-            }
-            else if ( nodeRotateIterator->Right != NULL )
-            {
-                TreeReplaceSubtree( Tree, nodeRotateIterator, nodeRotateIterator->Right );
-                nodeRotateIterator->Right = nodeToBeDel->Right;
-                nodeRotateIterator->Right->Parent = nodeRotateIterator;
+                TreeReplaceSubtree( Tree, nodeDeleteIterator, nodeDeleteIterator->Right );
+                nodeDeleteIterator->Right = nodeToBeDel->Right;
+                nodeDeleteIterator->Right->Parent = nodeDeleteIterator;
             }
 
-            TreeReplaceSubtree( Tree, nodeToBeDel, nodeRotateIterator );
+            TreeReplaceSubtree( Tree, nodeToBeDel, nodeDeleteIterator );
 
-            nodeRotateIterator->Left = nodeToBeDel->Left;
+            nodeDeleteIterator->Left = nodeToBeDel->Left;
 
-            nodeRotateIterator->Left->Parent = nodeRotateIterator;
+            nodeDeleteIterator->Left->Parent = nodeDeleteIterator;
 
-            nodeRotateIterator->Colour = nodeToBeDel->Colour;
+            nodeDeleteIterator->Colour = nodeToBeDel->Colour;
         }    
     }
 
     if ( originalColour == BLACK )
         TreeAdjustColourRemove( Tree, nodeAux );
+
+    Tree->Count--;
+
+    // ALL values must be deleted -> Check for duplicates
+    if ( TreeGetNode( Tree, Value, &nodeToBeDel ) == 1 )
+    {
+        goto start;
+    }
 
     return 0;
 }
@@ -204,19 +222,71 @@ int TreeContains(CC_TREE *Tree, int Value)
 int TreeGetCount(CC_TREE *Tree)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
-    return -1;
+
+    if ( NULL == Tree )
+    {
+        return -1;
+    }
+
+    return Tree->Count;
 }
 
 int TreeGetHeight(CC_TREE *Tree)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
-    return -1;
+
+    if ( NULL == Tree )
+    {
+        return -1;
+    }
+
+    // Compute Tree->Height; 
+
+    return TreeGetHeightAux( Tree->Head );
+}
+
+int TreeGetHeightAux( PNODE Node )
+{
+    CC_UNREFERENCED_PARAMETER(Node);
+
+    if ( Node == NULL )
+    {
+        return 0;
+    }
+
+    return 1 + Max( TreeGetHeightAux( Node->Left ), TreeGetHeightAux( Node->Right ) );
 }
 
 int TreeClear(CC_TREE *Tree)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
-    return -1;
+
+    if (NULL == Tree)
+    {
+        return -1;
+    }
+
+    TreeClearAux(Tree->Head);
+
+    Tree->Head = NULL;
+    Tree->Count = 0;
+
+    return 0;
+
+}
+
+void TreeClearAux( PNODE Head )
+{
+    if (Head == NULL)
+    {
+        return;
+    }
+
+    TreeClearAux( Head->Left );
+    TreeClearAux( Head->Right );
+
+    free(Head);
+    
 }
 
 int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value)
@@ -477,14 +547,18 @@ int TreeReplaceSubtree( PCC_TREE Tree, PNODE Source, PNODE Subtree )
             Source->Parent->Right = Subtree;
         } 
     } 
-
-    Subtree->Parent = Source->Parent;
+    // AICI E BUBA!!!
+    if (Subtree != NULL)
+    {
+        Subtree->Parent = Source->Parent;
+    }
+     
 
     return 0;
 }
 
 
-int TreePredecesor( PNODE Node, PNODE* Predecesor )
+int TreePredecesor( PNODE Node, PNODE* Predecesor ) // This is actually successor of x.. We try to find the predecesor of x->right which is the successor of x.
 {
     if ( NULL == Node )
     {

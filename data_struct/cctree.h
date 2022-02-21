@@ -12,6 +12,7 @@ typedef struct _NODE{
 
 typedef struct _CC_TREE {
     NODE* Head; 
+    int Count;
 } CC_TREE, *PCC_TREE;
 
 int TreeCreate(CC_TREE **Tree);
@@ -61,3 +62,8 @@ int TreeGetNode( PCC_TREE, int, PNODE* );
 int TreePredecesor( PNODE, PNODE* );
 
 int TreeAdjustColourRemove( PCC_TREE, PNODE );
+
+int TreeGetHeightAux( PNODE );
+
+// Comment
+void TreeClearAux(PNODE);

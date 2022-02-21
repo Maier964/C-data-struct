@@ -99,3 +99,14 @@ int Partition( int* Memory, int Left, int Right) // nu stiu daca avem voie cu si
 
     return j;
 }
+
+
+int Max( int a, int b ){ return ( (a) > (b) ) ? a : b; }
+
+void CustomMemcpy( void* Destination, void* Source, size_t Count )
+{
+    for( size_t i = 0; i < Count; i++ )
+    {
+        ((int*)Destination)[i] = ((int*)Source)[i];
+    }
+}

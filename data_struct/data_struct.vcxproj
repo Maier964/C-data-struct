@@ -152,12 +152,10 @@
     <ClInclude Include="cctree.h" />
     <ClInclude Include="ccvector.h" />
     <ClInclude Include="common.h" />
-    <ClInclude Include="cclist.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cchashtable.c" />
     <ClCompile Include="ccheap.c" />
-    <ClCompile Include="cclist.c" />
     <ClCompile Include="ccstack.c" />
     <ClCompile Include="cctree.c" />
     <ClCompile Include="ccvector.c" />
