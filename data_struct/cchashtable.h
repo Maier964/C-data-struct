@@ -6,7 +6,7 @@ typedef int (*PCC_HASH_TABLE_FUNCTION)( char* );
 
 typedef struct _CC_HASH_ITEM{
     int Value;
-    char* Key; 
+    char* Key;
 } CC_HASH_ITEM, *PCC_HASH_ITEM;
 
 typedef struct _CC_HASH_TABLE {
@@ -65,6 +65,9 @@ int HtGetKeyCount(CC_HASH_TABLE *HashTable);
 
 
 int HashDefaultFunction( char* Key );
+int CustomSizeHashFunction( char* Key, int Size );
 
 
-int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int )
+int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int );
+
+int HtInsertNeighbourhoodAux( PCC_HASH_ITEM, int, int );
