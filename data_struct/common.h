@@ -32,4 +32,4 @@ void CustomMemcpy( void*, void*, size_t );
 int GetStringLen( char* Str);
 
 
-int CustomStrCmp( const char, const char );
+int CustomStrCmp( char* , char* );

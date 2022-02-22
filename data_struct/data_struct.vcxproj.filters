@@ -33,9 +33,6 @@
     <ClInclude Include="common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cclist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ccstack.c">
@@ -54,9 +51,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="common.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cclist.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,5 @@
 #pragma once
 #include "stdint.h"
-#include "cclist.h"
 
 typedef int (*PCC_HASH_TABLE_FUNCTION)( char* );
 
@@ -19,6 +18,9 @@ typedef struct _CC_HASH_TABLE {
 typedef struct _CC_HASH_TABLE_ITERATOR
 {
     CC_HASH_TABLE *HashTable; // set by call to HtGetFirstKey
+    PCC_HASH_ITEM CurrentKey;
+    int CurrentCount;
+    int CurrentIndex;
 } CC_HASH_TABLE_ITERATOR;
 
 
@@ -70,4 +72,4 @@ int CustomSizeHashFunction( char* Key, int Size );
 
 int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int );
 
-int HtInsertNeighbourhoodAux( PCC_HASH_ITEM, int, int );
+int HtInsertNeighbourhoodAux( PCC_HASH_TABLE, int, int );

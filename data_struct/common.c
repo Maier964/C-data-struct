@@ -123,7 +123,7 @@ int GetStringLen( char* Str )
     return len;
 }
 
-int CustomStrCmp( const char *s1, const char *s2 )
+int CustomStrCmp( char*s1, char*s2 )
 {
     const unsigned char *p1 = ( const unsigned char * )s1;
     const unsigned char *p2 = ( const unsigned char * )s2;

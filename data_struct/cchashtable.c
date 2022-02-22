@@ -3,9 +3,10 @@
 // H is 32 to be sufficient for collisions but still be fetched in a single cache line.
 // For reference : https://programming.guide/hopscotch-hashing.html
 
-#include <string.h>
 #include "cchashtable.h"
 #include "common.h"
+//for memset
+#include <string.h>
 
 
 #define INITIAL_SIZE ((int)9.8317e4)
@@ -69,8 +70,14 @@ int HtCreate(CC_HASH_TABLE **HashTable)
 
     // Initialising everything to -1 is no longer required,
     // as we dont use that default value anywhere
-    memset( hashTableTemplate->Buckets, -1, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
-//    memset( hashTableTemplate->Buckets->Head, NULL, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+//    memset( hashTableTemplate->Buckets->Value, -1, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+//    memset( hashTableTemplate->Buckets->Key, NULL, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+
+    for (int i = 0; i < INITIAL_SIZE; i++)
+    {
+        hashTableTemplate->Buckets[i].Value = -1;
+        hashTableTemplate->Buckets[i].Key = NULL;
+    }
 
     hashTableTemplate->Count = 0;
 
@@ -103,7 +110,7 @@ int HtDestroy(CC_HASH_TABLE **HashTable)
 }
 
 
-int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value, int OriginalIndex)
+int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
     CC_UNREFERENCED_PARAMETER(Key);
@@ -124,7 +131,7 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value, int OriginalIn
     size = HashTable->Size;
 
     // Lookup 
-    if ( !HtGetKeyValue( HashTable, Key, Value ) )
+    if ( !HtGetKeyValue( HashTable, Key, &Value ) )
     {
         return -1;
     }
@@ -133,6 +140,7 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value, int OriginalIn
     if ( HashTable->Buckets[ position ].Key == NULL )
     {
         HtAddKeyAux( HashTable, Value, Key, position );
+        return 0;
     }
     else
     {
@@ -140,12 +148,21 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value, int OriginalIn
         // Hopscotch hashing is cyclic ( hence we use the "% size")
         for( int i = position+1; i < position+ H; i++ )
         {
-            // Found empty spot
+            
             if ( HashTable->Buckets[i % size].Key == NULL )
             {
+                // Found empty spot
                 HtAddKeyAux( HashTable, Value, Key , i );
                 return 0;
             }
+            
+            if ( !CustomStrCmp( HashTable->Buckets[ i % size ].Key, Key ) )
+            {
+                // Found key.. No duplicates allowed
+                LOG_ERROR(" Key %s is already in hash table.", Key);
+                return -1;
+            }
+
         }
 
         // Neighbourhood is full. Find next black bucket..
@@ -181,7 +198,8 @@ int HtGetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int *Value)
     int position;
     int size;
 
-    if ( NULL == HashTable || NULL == Value )
+
+    if (NULL == HashTable)
     {
         return -1;
     }
@@ -192,16 +210,17 @@ int HtGetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int *Value)
     // Check for head bucket and its neighbourhood
     for ( int i = position; i <= position + H; i++ )
     {
-        if ( HashTable->Buckets[i % size].Value == Value 
-            && CustomStrCmp( HashTable->Buckets[i % size].Key, Key ) )
+        if (HashTable->Buckets[i % size].Key != NULL)
+        {
+            if (!(CustomStrCmp(HashTable->Buckets[i % size].Key, Key)))
             {
                 // Found key
+                *Value = HashTable->Buckets[i % size].Value;
                 return 0;
             }
-        else goto exit;
-    }
+        }
 
-    exit:
+    }
 
     return -1;
 }
@@ -210,6 +229,31 @@ int HtRemoveKey(CC_HASH_TABLE *HashTable, char *Key)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
     CC_UNREFERENCED_PARAMETER(Key);
+
+    int headBucket;
+    int size;
+
+    if ( NULL == HashTable || NULL == Key )
+    {
+        return -1;
+    }
+
+    headBucket = HashTable->HashFunction( Key );
+    size = HashTable->Size;
+
+    for ( int i = headBucket; i < H + headBucket; i++)
+    {
+        if ( !CustomStrCmp( HashTable->Buckets[ i % size ].Key, Key ) )
+        {
+            // Found key, removing
+            HashTable->Buckets[i % size].Key = NULL;
+            HashTable->Buckets[ i % size ].Value = -1;
+            HashTable->Count--;
+            return 0;
+        }
+    }
+
+    // Key not found
     return -1;
 }
 
@@ -217,7 +261,29 @@ int HtHasKey(CC_HASH_TABLE *HashTable, char *Key)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
     CC_UNREFERENCED_PARAMETER(Key);
-    return -1;
+
+    int headBucket;
+    int size;
+
+    if ( NULL == HashTable || NULL == Key )
+    {
+        return -1;
+    }
+
+    headBucket = HashTable->HashFunction( Key );
+    size = HashTable->Size;
+
+    for ( int i = headBucket; i < H + headBucket; i++)
+    {
+        if ( !CustomStrCmp( HashTable->Buckets[ i % size ].Key, Key ) )
+        {
+            // Key found
+            return 1;
+        }
+    }
+
+    // Key not found
+    return 0;
 }
 
 int HtGetFirstKey(CC_HASH_TABLE* HashTable, CC_HASH_TABLE_ITERATOR **Iterator, char **Key)
@@ -240,6 +306,7 @@ int HtGetFirstKey(CC_HASH_TABLE* HashTable, CC_HASH_TABLE_ITERATOR **Iterator, c
     }
 
     iterator = (CC_HASH_TABLE_ITERATOR*)malloc(sizeof(CC_HASH_TABLE_ITERATOR));
+
     if (NULL == iterator)
     {
         return -1;
@@ -249,25 +316,83 @@ int HtGetFirstKey(CC_HASH_TABLE* HashTable, CC_HASH_TABLE_ITERATOR **Iterator, c
 
     iterator->HashTable = HashTable;
     // INITIALIZE THE REST OF THE FIELDS OF iterator
+    iterator->CurrentKey = NULL;
+    iterator->CurrentCount = 0;
+    iterator->CurrentIndex = 0;
 
     *Iterator = iterator;
 
-    // FIND THE FIRST KEY AND SET Key
+    if ( HashTable->Count == 0 )
+    {
+        // No keys in hash table
+        return -2;
+    }
 
-    return 0;
+    for( int i = 0; i < HashTable->Size; i++ )
+    {
+        if ( HashTable->Buckets[i].Key != NULL )
+        {
+            // First value found
+            (*Iterator)->CurrentKey = &(HashTable->Buckets[i]);
+            (*Iterator)->CurrentCount = 1;
+            (*Iterator)->CurrentIndex = i;
+        }
+    }
+
+    // Try to find a more efficient way to do this.. 
+    // Iterating trough all buckets is not adequate.
+
+    // No keys in hash table.
+    return -2;
 }
 
 int HtGetNextKey(CC_HASH_TABLE_ITERATOR *Iterator, char **Key)
 {
     CC_UNREFERENCED_PARAMETER(Key);
     CC_UNREFERENCED_PARAMETER(Iterator);
-    return -1;
+
+    if ( NULL == Iterator || NULL == Key )
+    {
+        return -1;
+    }
+
+    if ( Iterator->CurrentCount == Iterator->HashTable->Count )
+    {
+        return -2;
+    }
+
+    // Again.. Search for something more efficient.. 
+    // Maybe add an array of hash items and these will be the only populated items? idk
+
+    for ( int i = Iterator->CurrentIndex; i < Iterator->HashTable->Count; i++ )
+    {
+        if ( Iterator->HashTable->Buckets[i].Key != NULL )
+        {
+            // Next value found
+            Iterator->CurrentKey = &(Iterator->HashTable->Buckets[i]);
+            Iterator->CurrentCount++;
+            Iterator->CurrentIndex = i;
+        }
+    }
+
+    return -2;
 }
 
 int HtReleaseIterator(CC_HASH_TABLE_ITERATOR **Iterator)
 {
     CC_UNREFERENCED_PARAMETER(Iterator);
-    return -1;
+
+    if ( NULL == Iterator )
+    {
+        return -1;
+    }
+
+    free( (*Iterator)->CurrentKey );
+    free( *Iterator );
+
+    Iterator = NULL;
+
+    return 0;
 }
 
 int HtClear(CC_HASH_TABLE *HashTable)
@@ -298,18 +423,18 @@ int HtGetKeyCount(CC_HASH_TABLE *HashTable)
     return HashTable->Count;
 }
 
-// Dunno if ill ever use this funtion tbh
 int HtAddKeyAux( PCC_HASH_TABLE HashTable, int Value, char* Key, int Pos )
 {
 
-    if ( NULL == HashTable || NULL == Pos )
+    if ( NULL == HashTable )
     {
         return -1;
     }
 
     HashTable->Buckets[Pos].Value = Value;
-    HashTable->Buckets[Pos].Value = (char*)malloc( sizeof( char ) * GetStringLen(Key) );
+    HashTable->Buckets[Pos].Key = (char*)malloc( sizeof( char ) * GetStringLen(Key) );
     HashTable->Buckets[Pos].Key = Key;
+    HashTable->Count++;
 
     return 0;
 }
@@ -345,7 +470,7 @@ int HtInsertNeighbourhoodAux( PCC_HASH_TABLE HashTable, int headBucket, int blan
             candidateBucket = ( size + blankSpot - H + i ) % size;
 
             // Find head bucket of candidateBucket... 
-            candidateBucket = HashTable->HashFunction( 
+            candidateHeadBucket = HashTable->HashFunction( 
                 HashTable->Buckets[ candidateBucket ].Key );
 
             // Check if candidateHeadBucket is in the same neighbourhood as blankSpot
@@ -369,5 +494,9 @@ int HtInsertNeighbourhoodAux( PCC_HASH_TABLE HashTable, int headBucket, int blan
 
         LOG_ERROR( "Hash table at is full. Size is %d Expanding.. ", HashTable->Size );
         // EXPAND HashTable... Imd, nu mai am chef acum..
+
+        return 0;
     }
+
+    return 0;
 }
