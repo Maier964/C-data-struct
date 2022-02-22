@@ -1,11 +1,12 @@
 #pragma once
 #include "stdint.h"
+#include "cclist.h"
 
 typedef int (*PCC_HASH_TABLE_FUNCTION)( char* );
 
 typedef struct _CC_HASH_ITEM{
-    char* Key;
-    uint32_t HopInfo;
+    int Value;
+    char* Key; 
 } CC_HASH_ITEM, *PCC_HASH_ITEM;
 
 typedef struct _CC_HASH_TABLE {
@@ -64,3 +65,6 @@ int HtGetKeyCount(CC_HASH_TABLE *HashTable);
 
 
 int HashDefaultFunction( char* Key );
+
+
+int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int )

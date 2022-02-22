@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="cchashtable.h" />
     <ClInclude Include="ccheap.h" />
+    <ClInclude Include="cclist.h" />
     <ClInclude Include="ccstack.h" />
     <ClInclude Include="cctree.h" />
     <ClInclude Include="ccvector.h" />
@@ -156,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="cchashtable.c" />
     <ClCompile Include="ccheap.c" />
+    <ClCompile Include="cclist.c" />
     <ClCompile Include="ccstack.c" />
     <ClCompile Include="cctree.c" />
     <ClCompile Include="ccvector.c" />

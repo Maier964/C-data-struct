@@ -21,6 +21,8 @@ int CustomHeapTest();
 
 void RunTests();
 
+#define alpha(x) alphax
+
 
 int main(void)
 {
@@ -30,7 +32,25 @@ int main(void)
 
 //    CustomVectorTest();
 
-//    char* alpha = "abcdefghijklmnopqwe123SD";
+    char* alpha =  "mama";
+    char* alpha1 = "tata";
+    char* alpha2 = "ello";
+    char* alpha3 = "olle";
+    char* alpha4 = "cmon";
+    char* alpha5 = "assed";
+    char* alpha6 = "asdknaso asew";
+    char* alpha7 = "ceasd";
+
+    printf(" %d \n", HashDefaultFunction(alpha));
+    printf(" %d \n", HashDefaultFunction(alpha1));
+    printf(" %d \n", HashDefaultFunction(alpha2));
+    printf(" %d \n", HashDefaultFunction(alpha3));
+    printf(" %d \n", HashDefaultFunction(alpha4));
+    printf(" %d \n", HashDefaultFunction(alpha5));
+    printf(" %d \n", HashDefaultFunction(alpha6));
+    printf(" %d \n", HashDefaultFunction(alpha7));
+
+    
 
 //    for (int i = 0; i < 24; i++)
 //        printf("%d ", HashDefaultFunction(alpha[i]));
@@ -39,7 +59,9 @@ int main(void)
 
 //    printf(" %d ", Max(12, 14));
 
-    CustomHeapTest();
+//    CustomHeapTest();
+
+    TestHashTable();
 
 
     return 0;

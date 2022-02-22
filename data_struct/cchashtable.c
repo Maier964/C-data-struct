@@ -3,25 +3,31 @@
 #include "common.h"
 
 
-#define INITIAL_SIZE (int)1e+8
+#define INITIAL_SIZE ((int)9.8317e4)
 
-// Hopscotch Hashing using cache-friendly neighbourhood bucket fetching
+// Hopscotch Hashing
+// Each bucket will be part of H neighbourhoods and will have a neighbourhood of H buckets
+// H is 32 to be sufficient for collisions but still be fetched in a single cache line.
 #define H 32
 
-int HashDefaultFunction( char* Key )
+int HashDefaultFunction( char* Key)
 {
-    int val = 0;
-    
-    uint32_t desired = (int32_t)Key;
+    if ( NULL == Key )
+    {
+        LOG_ERROR(" Key %s is null", Key);
+    }
 
-    do{
-        desired ^= desired >> 7;
-        desired ^= desired << 9;
-        desired ^= desired >> 13;
-        val++;
-    }while( desired != ((int32_t)Key ^ 0xAB1Cu) );
+    int len = GetStringLen(Key);
+    int pow = 1;
+    int hash = 0;
 
-    return val % INITIAL_SIZE;
+    for ( int i = 0; i < len; i++ )
+    {   // What happens if you want a bigger hash table? Ans : Change macro or allocate another function, not the default one
+        hash = (hash + ( Key[i] - 'a' + 1 ) * pow) % INITIAL_SIZE;
+        pow = (pow * 31) % INITIAL_SIZE;
+    }
+
+    return hash % INITIAL_SIZE;
 }
 
 int HtCreate(CC_HASH_TABLE **HashTable)
@@ -40,7 +46,8 @@ int HtCreate(CC_HASH_TABLE **HashTable)
     hashTableTemplate->Buckets = (CC_HASH_ITEM*)malloc(INITIAL_SIZE * sizeof(CC_HASH_ITEM));
 
     // Hope this works
-    memset( hashTableTemplate->Buckets, 0, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+    memset( hashTableTemplate->Buckets, -1, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
+//    memset( hashTableTemplate->Buckets->Head, NULL, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
 
     hashTableTemplate->Count = 0;
 
@@ -78,26 +85,82 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
     CC_UNREFERENCED_PARAMETER(Key);
     CC_UNREFERENCED_PARAMETER(Value);
 
+    int position;
+    int size;
+
     if ( NULL == HashTable || NULL == Key )
     {
         return -1;
     }
 
-    // Position is empty in hashtable
-    if ( HashTable->Buckets[ HashTable->HashFunction( HashTable->Buckets->Key ) ].Key )
-    {
 
+    position = HashDefaultFunction( Key );
+    size = HashTable->Size;
+
+    // Lookup 
+    if ( !HtGetKeyValue( HashTable, Key, Value ) )
+    {
+        return -1;
+    }
+
+    // Position is empty in hashtable
+    if ( HashTable->Buckets[ position ].Value == -1 )
+    {
+        HtAddKeyAux( HashTable, Value, Key, position );
+    }
+    else
+    {
+        // Check neighbourhood of head bucket and search for empty spots
+        // Also check if position + H exists in ht..
+        for( int i = position+1; i < position+ H; i++ )
+        {
+            // Found empty spot
+            if ( HashTable->Buckets[i % size].Value == -1 )
+            {
+                HtAddKeyAux( HashTable, Value, Key , i );
+                return 0;
+            }
+        }
+
+        // Neighbourhood is full.
+
+        
     }
 
     return 0;
 }
 
-// Lookup is a bit tricky, I didn't quite get it
 int HtGetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int *Value)
 {
     CC_UNREFERENCED_PARAMETER(HashTable);
     CC_UNREFERENCED_PARAMETER(Key);
     CC_UNREFERENCED_PARAMETER(Value);
+
+    int position;
+    int size;
+
+    if ( NULL == HashTable || NULL == Value )
+    {
+        return -1;
+    }
+
+    position = HashDefaultFunction(Key);
+    size = HashTable->Size;
+
+    // Check for head bucket and its neighbourhood
+    for ( int i = position; i <= position + H; i++ )
+    {
+        if ( HashTable->Buckets[i % size].Value == Value 
+            && CustomStrCmp( HashTable->Buckets[i % size].Key, Key ) )
+            {
+                // Found key
+                return 0;
+            }
+        else goto exit;
+    }
+
+    exit:
+
     return -1;
 }
 
@@ -191,4 +254,20 @@ int HtGetKeyCount(CC_HASH_TABLE *HashTable)
     }
 
     return HashTable->Count;
+}
+
+// Dunno if ill ever use this funtion tbh
+int HtAddKeyAux( PCC_HASH_TABLE HashTable, int Value, char* Key, int Pos )
+{
+
+    if ( NULL == HashTable || NULL == Pos )
+    {
+        return -1;
+    }
+
+    HashTable->Buckets[Pos].Value = Value;
+    HashTable->Buckets[Pos].Value = (char*)malloc( sizeof( char ) * GetStringLen(Key) );
+    HashTable->Buckets[Pos].Key = Key;
+
+    return 0;
 }

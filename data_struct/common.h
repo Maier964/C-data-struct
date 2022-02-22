@@ -28,3 +28,8 @@ int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength);
 int Max(int, int);
 
 void CustomMemcpy( void*, void*, size_t );
+
+int GetStringLen( char* Str);
+
+
+int CustomStrCmp( const char, const char );
