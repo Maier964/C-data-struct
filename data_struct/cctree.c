@@ -1,11 +1,16 @@
 #include "cctree.h"
 #include "common.h"
+#include "ccstack.h"
 
 
 #define GO_LEFT(x) x = x->Left
 #define GO_RIGHT(x) x = x->Right
 #define BLACK 0
 #define RED 1
+
+
+// Delete
+static int notOkRed = 0;
 
 
 int TreeCreate(CC_TREE **Tree)
@@ -27,7 +32,6 @@ int TreeCreate(CC_TREE **Tree)
     return 0;
 }
 
-// Leave for later
 int TreeDestroy(CC_TREE **Tree)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
@@ -39,7 +43,7 @@ int TreeDestroy(CC_TREE **Tree)
 
     TreeClear(*Tree);
 
-    free(Tree);
+    //free(Tree);
 
     Tree = NULL;
 
@@ -90,6 +94,13 @@ int TreeInsert(CC_TREE *Tree, int Value)
 
         node->Parent = nodeParent;
 
+        // Added 
+        if ( nodeParent == NULL )
+        {
+            Tree->Head = node;
+        }
+        //
+
         if ( nodeParent->Value > Value )
         {
             nodeParent->Left = node;
@@ -103,6 +114,14 @@ int TreeInsert(CC_TREE *Tree, int Value)
     TreeAdjustColourInsert(Tree, node);
 
     Tree->Count++;
+
+    // Minor fix-up for some particular cases of rotations
+    if ( Tree->Head->Parent != NULL )
+    {
+        Tree->Head->Colour = RED;
+        Tree->Head = Tree->Head->Parent;
+    }
+
 
     return 0;
 }
@@ -118,6 +137,8 @@ int TreeRemove(CC_TREE *Tree, int Value)
     PNODE nodeToBeDel = NULL;
     PNODE nodeDeleteIterator = NULL;
     PNODE nodeAux = NULL;
+    bool originalColour;
+    PNODE nodeParentAux = NULL;
 
     if ( TreeGetNode( Tree, Value, &nodeToBeDel ) != 1 )
     {
@@ -130,7 +151,12 @@ int TreeRemove(CC_TREE *Tree, int Value)
 
     nodeDeleteIterator = nodeToBeDel;
 
-    bool originalColour = nodeDeleteIterator->Colour;
+    if (nodeToBeDel->Parent != NULL)
+    {
+        nodeParentAux = nodeToBeDel->Parent;
+    }
+    
+    originalColour = nodeDeleteIterator->Colour;
 
     // Is a leaf or has some right childs. In both cases, TreeReplaceSubtree does the job of interchanging the two nodes
     // We are sure of the fact that if a node has no left child, it will have only one right child, because otherwise the tree is not balanced anymore.
@@ -171,8 +197,11 @@ int TreeRemove(CC_TREE *Tree, int Value)
         }    
     }
 
-    if ( originalColour == BLACK )
-        TreeAdjustColourRemove( Tree, nodeAux );
+    if (originalColour == BLACK)
+    {
+        TreeAdjustColourRemove(Tree, nodeAux);
+    }
+        
 
     Tree->Count--;
 
@@ -294,7 +323,18 @@ int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value)
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Index);
     CC_UNREFERENCED_PARAMETER(Value);
-    return -1;
+
+    if ( NULL == Tree )
+    {
+        return -1;
+    }
+
+    if ( Index > Tree->Count )
+    {
+        return -1;
+    }
+
+    return 0;
 }
 
 int TreeGetNthInorder(CC_TREE *Tree, int Index, int *Value)
@@ -322,31 +362,31 @@ int TreeLeftRotate( PCC_TREE Tree, PNODE Source )
         return -1;
     }
 
-    NODE* Right = Source->Right;
+    NODE* y = Source->Right;
 
-    Source->Right = Right->Left;
-    if ( Right->Left != NULL )
+    Source->Right = y->Left;
+    if ( y->Left != NULL )
     {
-        Right->Left->Parent = Source;
+        y->Left->Parent = Source;
     }
-    Right->Parent = Source->Parent;
+    y->Parent = Source->Parent;
 
     // 3 cases
     // 1. Source is root
     if ( Source->Parent == NULL )
     {
-        Tree->Head = Right;
+        Tree->Head = y;
     }
     // 2. Source is the left child of its parent
     else if ( Source == Source->Parent->Left ){
-        Source->Parent->Left = Right;
+        Source->Parent->Left = y;
     }
     // 3. Source is the right child of its parent
-    else Source->Parent->Right = Right;
+    else Source->Parent->Right = y;
 
-    Right->Left = Source;
+    y->Left = Source;
 
-    Source->Parent = Right;
+    Source->Parent = y;
 
     return 0;
 }
@@ -359,30 +399,30 @@ int TreeRightRotate( PCC_TREE Tree, PNODE Source )
         return -1;
     }
 
-    NODE* Left = Source->Left;
+    NODE* y = Source->Left;
 
 
-    Source->Left = Left->Right;
-    if ( Left->Right != NULL )
+    Source->Left = y->Right;
+    if ( y->Right != NULL )
     {
-        Left->Right->Parent = Source;
+        y->Right->Parent = Source;
     }
 
-    Left->Parent = Source->Parent;
+    y->Parent = Source->Parent;
 
     if ( Source->Parent == NULL )
     {
-        Tree->Head = Source;
+        Tree->Head = y;
     }
-    else if ( Source->Parent == Source->Parent->Left )
+    else if ( Source == Source->Parent->Right )
     {
-        Source->Parent->Left = Left;
+        Source->Parent->Right = y;
     }
-    else Source->Parent->Right = Left;
+    else Source->Parent->Left = y;
 
-    Left->Right = Source;
+    y->Right = Source;
 
-    Source->Parent = Left;
+    Source->Parent = y;
 
     return 0;
 }
@@ -463,7 +503,7 @@ int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
                 Node->Parent->Colour = BLACK;
 
                 Node->Parent->Parent->Colour = RED;
-
+                
                 TreeLeftRotate( Tree, Node->Parent->Parent );
             }
         }
@@ -547,6 +587,7 @@ int TreeReplaceSubtree( PCC_TREE Tree, PNODE Source, PNODE Subtree )
             Source->Parent->Right = Subtree;
         } 
     } 
+
     // AICI E BUBA!!!
     if (Subtree != NULL)
     {
@@ -578,19 +619,19 @@ int TreePredecesor( PNODE Node, PNODE* Predecesor ) // This is actually successo
 }
 
 
-int TreeAdjustColourRemove( PCC_TREE Tree, PNODE Node )
+int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Node);
 
-    if ( NULL == Tree || NULL == Node )
+    if (NULL == Tree || NULL == Node)
     {
         return -1;
     }
 
     PNODE sibling = NULL;
 
-    while( Node != Tree->Head && Node->Colour == BLACK )
+    while (Node != Tree->Head && (Node->Colour == BLACK)) // changed here
     {
         if ( Node == Node->Parent->Left )
         {
@@ -672,6 +713,89 @@ int TreeAdjustColourRemove( PCC_TREE Tree, PNODE Node )
     }
 
     Node->Colour = BLACK;
+
+    return 0;
+}
+
+
+int TestRB( PCC_TREE Root )
+{
+
+    if ( Root->Head->Colour != BLACK )
+    {
+        printf("\nNot RB!! Condition 1 is wrong omggg....");
+        return 0;
+    }
+
+    if ( GetRBHeight( Root->Head ) == 0 )
+    {
+        printf("%d ", GetRBHeight(Root->Head->Right) - GetRBHeight(Root->Head->Right));
+        printf("\nNot RB!! Condition 2 is wrong omggg....");
+        return 0;
+    }
+
+    CheckRedCondition( Root->Head );
+
+    if ( notOkRed != 0 )
+    {
+        printf("\nNot RB!! Condition 3 is wrong omggg....");
+        return 0;
+    }
+
+
+    printf( "YESSS, RB TREE!!!\n" );
+
+    
+    return 0;
+
+}
+
+
+int GetRBHeight( PNODE Node )
+{
+    if ( Node == NULL )
+    {
+        return 1;
+    }
+
+    int leftBHeight = GetRBHeight(Node->Left);
+
+    if ( leftBHeight == 0 )
+        return leftBHeight;
+
+    int rightBHeight = GetRBHeight( Node->Right );
+
+
+    if ( rightBHeight == 0 )
+        return rightBHeight;
+
+    if ( leftBHeight != rightBHeight )
+        return 0;
+    else return  leftBHeight + 1 - Node->Colour;
+    
+}
+
+int CheckRedCondition( PNODE Node )
+{
+
+    if ( Node == NULL )
+    {
+        return 0;
+    }
+
+    if ( Node->Colour == RED )
+    {
+        if ( (Node->Left!= NULL && Node->Left->Colour != BLACK)
+         || (Node->Right!= NULL && Node->Right->Colour != BLACK) )
+        {
+            notOkRed++;
+        }
+    }
+    else
+    {
+        CheckRedCondition( Node -> Left );
+        CheckRedCondition( Node ->Right);
+    }
 
     return 0;
 }

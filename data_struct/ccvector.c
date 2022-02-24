@@ -75,13 +75,13 @@ int VecInsertTail(CC_VECTOR* Vector, int Value)
     {
         /// REALLOC
         /// Use an aux to store the vector pointer
-        /// Allow an additonal 100 slots every time array exceeds size.
-        aux = realloc(Vector->Array, (Vector->Count + 100) * sizeof(int));
+        /// Allow an additonal (10% * size) slots every time array exceeds size.
+        aux = realloc(Vector->Array, (Vector->Size + (10* Vector->Size ) / 100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
 //           printf("Realloc succesful");
-            Vector->Size += 100;
+            Vector->Size += (10 * Vector->Size) / 100;
         }
         else
         {
@@ -108,14 +108,14 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
 
     if (Vector->Count + 1 >= Vector->Size)
     {
-        /// REALLOC (Add another 100 elements to the vector)
+        /// REALLOC 
         /// Use an aux to store the vector pointer
-        aux = realloc(Vector->Array, (Vector->Count+100) * sizeof(int));
+        aux = realloc(Vector->Array, (Vector->Size+ (10* Vector->Size ) / 100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
             //printf("Realloc succesful");
-            Vector->Size+=100;
+            Vector->Size+=((10* Vector->Size ) / 100);
         }
         else
         {

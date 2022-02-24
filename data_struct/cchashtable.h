@@ -12,6 +12,7 @@ typedef struct _CC_HASH_TABLE {
     CC_HASH_ITEM* Buckets;
     int Count;
     int Size;
+    int TimesExpanded;
     PCC_HASH_TABLE_FUNCTION HashFunction;
 } CC_HASH_TABLE, *PCC_HASH_TABLE;
 
@@ -73,3 +74,5 @@ int CustomSizeHashFunction( char* Key, int Size );
 int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int );
 
 int HtInsertNeighbourhoodAux( PCC_HASH_TABLE, int, int );
+
+int HtExpand( PCC_HASH_TABLE, int );

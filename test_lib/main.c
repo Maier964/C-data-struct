@@ -21,8 +21,6 @@ int CustomHeapTest();
 
 void RunTests();
 
-#define alpha(x) alphax
-
 
 int main(void)
 {
@@ -32,36 +30,20 @@ int main(void)
 
 //    CustomVectorTest();
 
-    char* alpha =  "mama";
-    char* alpha1 = "tata";
-    char* alpha2 = "ello";
-    char* alpha3 = "olle";
-    char* alpha4 = "cmon";
-    char* alpha5 = "assed";
-    char* alpha6 = "asdknaso asew";
-    char* alpha7 = "ceasd";
-
-    printf(" %d \n", HashDefaultFunction(alpha));
-    printf(" %d \n", HashDefaultFunction(alpha1));
-    printf(" %d \n", HashDefaultFunction(alpha2));
-    printf(" %d \n", HashDefaultFunction(alpha3));
-    printf(" %d \n", HashDefaultFunction(alpha4));
-    printf(" %d \n", HashDefaultFunction(alpha5));
-    printf(" %d \n", HashDefaultFunction(alpha6));
-    printf(" %d \n", HashDefaultFunction(alpha7));
-
     
 
 //    for (int i = 0; i < 24; i++)
 //        printf("%d ", HashDefaultFunction(alpha[i]));
 
-//    CustomTreeTest();
+    CustomTreeTest();
 
 //    printf(" %d ", Max(12, 14));
 
 //    CustomHeapTest();
 
-    TestHashTable();
+//    TestHashTable();
+
+//    TestTree();
 
 
     return 0;
@@ -146,6 +128,7 @@ int TestTree()
         goto cleanup;
     }
 
+    // Wrong
     retVal = TreeRemove(usedTree, 20);
     if (0 != retVal)
     {
@@ -541,33 +524,32 @@ int CustomTreeTest()
 {
     CC_TREE* usedTree = NULL;
 
-    int aux[] = {12,1,110,92,2,16,1,200};
+    int aux[] = { 48,10,32,44,35,27,9,41,21,38
+
+    };
+
 
     TreeCreate( &usedTree );
 
    
 
-    for ( int i = 0; i < 7; i++)
+    for ( int i = 0; i < 10; i++)
     {
         TreeInsert( usedTree, aux[i] );
-//        TreePrint( usedTree->Head );
-        putchar(10);
-//        printf(" Step %d done.. \n\n ", i);
+//        printf(" %d ", i);
+        //printf(" Iteration step : %d: \n Left Height: %d \n Right Height: %d \n Verdict: \n", i, TreeGetHeightAux( usedTree->Head->Left ), TreeGetHeightAux( usedTree->Head->Right ));
+//        TestRB(usedTree);
     }
 
-    TreeRemove(usedTree, 12);
-
-    TreeInsert(usedTree, 300);
-
-//    TreePrint(usedTree->Head);
-
-    TreeGetHeight(usedTree);
-
-//    printf(" Height: %d ", usedTree->Height);
-
-    TreeClear(usedTree);
-
     TreePrint(usedTree->Head);
+
+    for (int i = 0; i < 10; i++)
+    {
+        TreeRemove(usedTree, aux[i]);
+        printf(" %d ", i);
+        TestRB(usedTree);
+    }
+
 
 
     return 0;

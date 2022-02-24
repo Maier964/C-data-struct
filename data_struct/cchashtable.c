@@ -1,6 +1,6 @@
 // Hopscotch Hashing
 // Each bucket will be part of H neighbourhoods and will have a neighbourhood of H buckets
-// H is 32 to be sufficient for collisions but still be fetched in a single cache line.
+// H is 64 to be sufficient for collisions but still be fetched in a single cache line.
 // For reference : https://programming.guide/hopscotch-hashing.html
 
 #include "cchashtable.h"
@@ -9,9 +9,12 @@
 #include <string.h>
 
 
-#define INITIAL_SIZE ((int)9.8317e4)
+#define INITIAL_SIZE ((int)2.4593e4)
 
-#define H 32
+#define H 64
+
+int expansionPrimeNrs[4] = { (int)4.9157e4 ,
+(int)9.8317e4 ,(int)1.96613e5 , (int)3.93241e5 }; 
 
 int HashDefaultFunction( char* Key)
 {
@@ -85,6 +88,8 @@ int HtCreate(CC_HASH_TABLE **HashTable)
 
     hashTableTemplate->HashFunction = HashDefaultFunction;
 
+    hashTableTemplate->TimesExpanded = 0;
+
     *HashTable = hashTableTemplate;
 
     return 0;
@@ -134,6 +139,14 @@ int HtSetKeyValue(CC_HASH_TABLE *HashTable, char *Key, int Value)
     if ( !HtGetKeyValue( HashTable, Key, &Value ) )
     {
         return -1;
+    }
+
+    // Check if hash table needs expansion.
+    if ( (float)HashTable->Count / HashTable->Size > 0.7 )
+    {
+        // New size can be a new prime that is 2 times greater than
+        // the original size ( minimum )
+        HtExpand( HashTable, expansionPrimeNrs[ HashTable->TimesExpanded ] );
     }
 
     // Position is empty in hashtable
@@ -346,6 +359,7 @@ int HtGetFirstKey(CC_HASH_TABLE* HashTable, CC_HASH_TABLE_ITERATOR **Iterator, c
     return -2;
 }
 
+
 int HtGetNextKey(CC_HASH_TABLE_ITERATOR *Iterator, char **Key)
 {
     CC_UNREFERENCED_PARAMETER(Key);
@@ -497,6 +511,33 @@ int HtInsertNeighbourhoodAux( PCC_HASH_TABLE HashTable, int headBucket, int blan
 
         return 0;
     }
+
+    return 0;
+}
+
+
+int HtExpand( PCC_HASH_TABLE HashTable, int newSize )
+{
+    PCC_HASH_ITEM hashTblAux = NULL;
+
+    if ( NULL == HashTable || newSize < HashTable->Size )
+    {
+        return -1;
+    }
+
+    hashTblAux = realloc( HashTable->Buckets, newSize * sizeof( CC_HASH_ITEM ) );
+
+    if ( NULL == hashTblAux )
+    {
+        LOG_ERROR("Hash table at expansion failed at %p", HashTable);
+        return -1;
+    }
+
+    HashTable->Buckets = hashTblAux;
+
+    HashTable->Size = newSize;
+
+    HashTable->TimesExpanded++;
 
     return 0;
 }

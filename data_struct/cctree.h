@@ -67,3 +67,9 @@ int TreeGetHeightAux( PNODE );
 
 // Comment
 void TreeClearAux(PNODE);
+
+int TestRB( PCC_TREE );
+
+int GetRBHeight( PNODE );
+
+int CheckRedCondition( PNODE );
