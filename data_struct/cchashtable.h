@@ -76,3 +76,5 @@ int HtAddKeyAux( PCC_HASH_TABLE, int, char*, int );
 int HtInsertNeighbourhoodAux( PCC_HASH_TABLE, int, int );
 
 int HtExpand( PCC_HASH_TABLE, int );
+
+void HtPrint(PCC_HASH_TABLE);

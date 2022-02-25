@@ -51,6 +51,8 @@ int VecDestroy(CC_VECTOR** Vector)
     }
 
     free(vec->Array);
+    vec->Array = NULL;
+
     free(vec);
 
     *Vector = NULL;

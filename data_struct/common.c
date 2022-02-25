@@ -1,12 +1,15 @@
 #include "common.h"
 #include "stdint.h"
 
+static char defaultSeed = 'a';
 
-// You can do a TEMPLATE SWAP here
 void Swap(int* Value1, int* Value2)
 {
-    // void* aux = NULL;
-    // aux = calloc(1,sizeof(Value1)); // Check for errors here
+    if (NULL == Value1 || NULL == Value2) 
+    {
+        LOG_ERROR(" Swap failed, tried to swap with NULL memory");
+        return;
+    }
 
     int aux;
 
@@ -18,7 +21,7 @@ void Swap(int* Value1, int* Value2)
 
 // Generator de numere pseudo-aleatoare
 // Accepta un sir de caractere ca seed.
-int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength)
+int RandomNumberGenerator(int MinVal, int MaxVal, char Seed)
 {
     if (MinVal > MaxVal)
     {
@@ -27,14 +30,10 @@ int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength)
 
     int result = 0;
 
-    // Orice valoare diferita de 0 este valida pentru generare
-    uint16_t seed = 0xD011u;
-
-    for ( int i = 0; i < SeedLength; i++ )
-        seed ^=  (uint8_t)Seed[i];
+    uint16_t val = 0xD011u;
     
     // Initializam un Linear Feedback shit register pe 16 biti cu metoda Xorshift
-    uint16_t random = seed;
+    uint16_t random = val ^ Seed;
 
     do
     {
@@ -42,9 +41,8 @@ int RandomNumberGenerator(int MinVal, int MaxVal, char* Seed, int SeedLength)
         random ^= random << 9;
         random ^= random >> 13;
         ++result;
-    } while (random != seed);
+    } while (random != val);
 
-    seed++;
 
     return (result % ( MaxVal - MinVal + 1 )) + MinVal;
 }
@@ -59,8 +57,6 @@ void QuickSort(int* Memory, int LeftBorder, int RightBorder)
         QuickSort(Memory, LeftBorder, pivot - 1);
 
         QuickSort(Memory, pivot + 1, RightBorder);
-
-
     }
 
 }
@@ -69,9 +65,17 @@ int Partition( int* Memory, int Left, int Right) // nu stiu daca avem voie cu si
 {
     // Take first element as pivot for now
 
-    int piv, i, j;
+    int piv, i, j, rand;
 
-    piv = Memory[Left];
+    rand = RandomNumberGenerator(Left, Right, defaultSeed);
+
+    piv = Memory[rand];
+
+    defaultSeed += '1';
+
+    Swap( &piv, &Memory[Left] );
+
+    //piv = Memory[Left];
     i = Left;
     j = Right;
 

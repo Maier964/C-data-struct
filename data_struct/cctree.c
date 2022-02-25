@@ -8,6 +8,7 @@
 #define BLACK 0
 #define RED 1
 
+#define isBlack(x) ( (x) == NULL || (x)->Colour == BLACK )
 
 // Delete
 static int notOkRed = 0;
@@ -137,7 +138,7 @@ int TreeRemove(CC_TREE *Tree, int Value)
     PNODE nodeToBeDel = NULL;
     PNODE nodeDeleteIterator = NULL;
     PNODE nodeAux = NULL;
-    bool originalColour;
+    //bool originalColour;
     PNODE nodeParentAux = NULL;
 
     if ( TreeGetNode( Tree, Value, &nodeToBeDel ) != 1 )
@@ -149,59 +150,57 @@ int TreeRemove(CC_TREE *Tree, int Value)
     // nodeToBeDel is assigned
     start:
 
-    nodeDeleteIterator = nodeToBeDel;
-
-    if (nodeToBeDel->Parent != NULL)
+    if( nodeToBeDel->Left == NULL || nodeToBeDel->Right == NULL )
     {
-        nodeParentAux = nodeToBeDel->Parent;
+        nodeDeleteIterator = nodeToBeDel;
+    }    
+    else
+    {
+        TreePredecesor( nodeToBeDel->Right, &nodeDeleteIterator );
     }
-    
-    originalColour = nodeDeleteIterator->Colour;
 
-    // Is a leaf or has some right childs. In both cases, TreeReplaceSubtree does the job of interchanging the two nodes
-    // We are sure of the fact that if a node has no left child, it will have only one right child, because otherwise the tree is not balanced anymore.
-    if ( nodeToBeDel->Left == NULL ) 
+    if ( nodeDeleteIterator->Left != NULL )
     {
-        nodeAux = nodeToBeDel->Right;
-        TreeReplaceSubtree( Tree, nodeToBeDel, nodeToBeDel->Right );
+        nodeAux = nodeDeleteIterator->Left;
     }
     else
     {
-        if ( nodeToBeDel->Right == NULL ) // Has only a left child
-        {
-            nodeAux = nodeToBeDel->Left;
-            TreeReplaceSubtree( Tree, nodeToBeDel, nodeToBeDel->Left );
-        }
-        else{
-            // Has both children
-            TreePredecesor( nodeToBeDel->Right, &nodeDeleteIterator);
-            originalColour = nodeDeleteIterator->Colour;
-
-            nodeAux = nodeDeleteIterator->Right;
-
-
-            if ( nodeDeleteIterator->Parent != nodeToBeDel ) 
-            {
-                TreeReplaceSubtree( Tree, nodeDeleteIterator, nodeDeleteIterator->Right );
-                nodeDeleteIterator->Right = nodeToBeDel->Right;
-                nodeDeleteIterator->Right->Parent = nodeDeleteIterator;
-            }
-
-            TreeReplaceSubtree( Tree, nodeToBeDel, nodeDeleteIterator );
-
-            nodeDeleteIterator->Left = nodeToBeDel->Left;
-
-            nodeDeleteIterator->Left->Parent = nodeDeleteIterator;
-
-            nodeDeleteIterator->Colour = nodeToBeDel->Colour;
-        }    
+        nodeAux = nodeDeleteIterator->Right;
     }
 
-    if (originalColour == BLACK)
+    if ( nodeAux != NULL )
     {
-        TreeAdjustColourRemove(Tree, nodeAux);
+        nodeAux->Parent = nodeDeleteIterator->Parent;
     }
-        
+
+    nodeParentAux = nodeDeleteIterator->Parent;
+
+    bool nodeIteratorIsLeft = false;
+
+    if ( nodeDeleteIterator->Parent == NULL )
+    {
+        Tree->Head = nodeAux;
+    }
+    else if ( nodeDeleteIterator == nodeDeleteIterator->Parent->Left )
+    {
+        nodeDeleteIterator->Parent->Left = nodeAux;
+        nodeIteratorIsLeft = true;
+    }
+    else
+    {
+        nodeDeleteIterator->Parent->Right = nodeAux;
+        nodeIteratorIsLeft = false;
+    }
+
+    if ( nodeDeleteIterator != nodeToBeDel )
+    {
+        nodeToBeDel->Value = nodeDeleteIterator->Value;
+    }
+
+    if ( nodeDeleteIterator->Colour == BLACK )
+    {
+        TreeAdjustColourRemove( Tree, nodeAux, nodeParentAux, nodeIteratorIsLeft );
+    }
 
     Tree->Count--;
 
@@ -430,6 +429,7 @@ int TreeRightRotate( PCC_TREE Tree, PNODE Source )
 
 int TreeNodeCreate( PNODE Node, int Value )
 {
+
     Node->Value = Value;
     Node->Colour = RED; // Inserted nodes are red by default.
     Node->Left = Node->Right = Node->Parent = NULL;
@@ -619,100 +619,113 @@ int TreePredecesor( PNODE Node, PNODE* Predecesor ) // This is actually successo
 }
 
 
-int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node)
+int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node, PNODE NodeParent, bool isLeft)
 {
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Node);
+    CC_UNREFERENCED_PARAMETER(NodeParent);
+    CC_UNREFERENCED_PARAMETER(isLeft);
 
-    if (NULL == Tree || NULL == Node)
+    if (NULL == Tree)
     {
         return -1;
     }
 
+    // Continue from here tomorrow. Hopefully you remember
     PNODE sibling = NULL;
 
-    while (Node != Tree->Head && (Node->Colour == BLACK)) // changed here
-    {
-        if ( Node == Node->Parent->Left )
-        {
-            sibling = Node->Parent->Right;
 
-            // Case 1
+    while( Node != Tree->Head && isBlack(Node)  )
+    {
+        if ( isLeft )
+        {
+            sibling = NodeParent->Right;
             if ( sibling->Colour == RED )
             {
                 sibling->Colour = BLACK;
-                Node->Parent->Colour = RED;
-                TreeLeftRotate( Tree, Node->Parent );
-                sibling = Node->Parent->Right;
+                NodeParent->Colour = RED;
+                TreeLeftRotate( Tree, NodeParent );
+                sibling = NodeParent->Right;
             }
-            // Case 2
-            if ( sibling->Left->Colour == BLACK && sibling->Right->Colour == BLACK )
+
+            if ( isBlack(sibling->Left)  && isBlack(sibling->Right) )
             {
                 sibling->Colour = RED;
-                Node = Node->Parent;
+                Node = NodeParent;
+                NodeParent = Node->Parent;
+                isLeft = ( NodeParent != NULL &&  Node == NodeParent->Left );
             }
             else
             {
-                // Case 3
-                if ( sibling->Right->Colour == BLACK )
+                if ( isBlack( sibling->Right ) )
                 {
                     sibling->Left->Colour = BLACK;
                     sibling->Colour = RED;
                     TreeRightRotate( Tree, sibling );
-                    sibling = Node->Parent->Right;
-                } 
+                    sibling = NodeParent->Right;
+                }
 
-                // Case 4
-                sibling->Colour = Node->Parent->Colour;
+                sibling->Colour = NodeParent->Colour;
+                NodeParent->Colour = BLACK;
 
-                Node->Parent->Colour = BLACK;
-
-                sibling->Right->Colour = BLACK;
-
-                TreeLeftRotate( Tree, Node->Parent );
-
+                if ( sibling->Right != NULL )
+                {
+                    sibling->Right->Colour = BLACK;
+                }
+                TreeLeftRotate( Tree, NodeParent );
                 Node = Tree->Head;
+                NodeParent = NULL;
             }
         }
-        else // Symmetric
+        else
+        // isLeft = False; symmetric
         {
-            sibling = Node->Parent->Left;
+            sibling = NodeParent->Left;
             if ( sibling->Colour == RED )
             {
                 sibling->Colour = BLACK;
-                Node->Parent->Colour = RED;
-                TreeRightRotate( Tree, Node->Parent );
-                sibling = Node->Parent->Left;
+                NodeParent->Colour = RED;
+                TreeRightRotate( Tree, NodeParent );
+                sibling = NodeParent->Left;
             }
-            if ( sibling->Right->Colour == BLACK && sibling->Left->Colour == BLACK )
+
+            if ( isBlack(sibling->Right) && isBlack(sibling->Left))
             {
                 sibling->Colour = RED;
-                Node = Node->Parent;
+                Node = NodeParent;
+                NodeParent = Node->Parent;
+                isLeft = (NodeParent != NULL && Node == NodeParent->Left);
             }
             else
             {
-                if ( sibling->Left->Colour == BLACK )
+                if ( isBlack(sibling->Left) )
                 {
                     sibling->Right->Colour = BLACK;
                     sibling->Colour = RED;
                     TreeLeftRotate( Tree, sibling );
-                    sibling = Node->Parent->Left;
-                } 
+                    sibling = NodeParent->Left; 
+                }
 
-                sibling->Colour = Node->Parent->Colour;
-
-                Node->Parent->Colour = BLACK;
-
-                sibling->Left->Colour = BLACK;
-
-                TreeRightRotate( Tree, Node->Parent );
-
+                sibling->Colour = NodeParent->Colour;
+                NodeParent->Colour = BLACK;
+                if ( sibling->Left != NULL )
+                {
+                    sibling->Left->Colour = BLACK;
+                }
+                TreeRightRotate( Tree, NodeParent );
                 Node = Tree->Head;
+                NodeParent = NULL;
             }
         }
+
+        
     }
 
-    Node->Colour = BLACK;
+    if (Node != NULL)
+    {
+        Node->Colour = BLACK;
+    }
+    
 
     return 0;
 }
@@ -720,6 +733,9 @@ int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node)
 
 int TestRB( PCC_TREE Root )
 {
+
+    if (Root->Head == NULL)
+        return 0;
 
     if ( Root->Head->Colour != BLACK )
     {

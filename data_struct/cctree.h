@@ -61,7 +61,7 @@ int TreeGetNode( PCC_TREE, int, PNODE* );
 
 int TreePredecesor( PNODE, PNODE* );
 
-int TreeAdjustColourRemove( PCC_TREE, PNODE );
+int TreeAdjustColourRemove( PCC_TREE, PNODE , PNODE, bool);
 
 int TreeGetHeightAux( PNODE );
 

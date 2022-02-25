@@ -33,7 +33,8 @@ int HashDefaultFunction( char* Key)
         pow = (pow * 31) % INITIAL_SIZE;
     }
 
-    return hash % INITIAL_SIZE;
+
+    return (hash > 0) ? (hash % INITIAL_SIZE) : (-1 * hash) % INITIAL_SIZE;
 }
 
 int CustomSizeHashFunction( char* Key, int Size )
@@ -540,4 +541,15 @@ int HtExpand( PCC_HASH_TABLE HashTable, int newSize )
     HashTable->TimesExpanded++;
 
     return 0;
+}
+
+void HtPrint( PCC_HASH_TABLE HashTable )
+{
+    for( int i = 0; i < HashTable->Size; i++ )
+    {
+        if ( HashTable->Buckets[i].Key != NULL )
+        {
+            printf(" Bucket %d : Key %s : Value %d \n ", i , HashTable->Buckets[i].Key, HashTable->Buckets[i].Value);
+        }
+    }
 }
