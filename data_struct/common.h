@@ -27,10 +27,13 @@ int RandomNumberGenerator(int MinVal, int MaxVal, char Seed);
 // Do it inline... otherwise do it in a macro
 int Max(int, int);
 
+
 void CustomMemcpy( void*, void*, size_t );
 
 int GetStringLen( char* Str);
 
 
 int CustomStrCmp( char* , char* );
+
+int CustomIntMemSet( int* , int, size_t );
 

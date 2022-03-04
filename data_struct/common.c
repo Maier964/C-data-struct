@@ -1,13 +1,14 @@
 #include "common.h"
 #include "stdint.h"
 
-static char defaultSeed = 'a';
+// This seed variable will be incremented to ensure a certain level of "randomness"
+// for the shift register
+static char gDefaultSeed = 'a';
 
 void Swap(int* Value1, int* Value2)
 {
     if (NULL == Value1 || NULL == Value2) 
     {
-        LOG_ERROR(" Swap failed, tried to swap with NULL memory");
         return;
     }
 
@@ -19,8 +20,8 @@ void Swap(int* Value1, int* Value2)
 }
 
 
-// Generator de numere pseudo-aleatoare
-// Accepta un sir de caractere ca seed.
+// Pseudo-random number generator
+// Needs a seed character
 int RandomNumberGenerator(int MinVal, int MaxVal, char Seed)
 {
     if (MinVal > MaxVal)
@@ -32,7 +33,7 @@ int RandomNumberGenerator(int MinVal, int MaxVal, char Seed)
 
     uint16_t val = 0xD011u;
     
-    // Initializam un Linear Feedback shit register pe 16 biti cu metoda Xorshift
+    // Linear Feedback shit register on 16 bits (Xorshift method)
     uint16_t random = val ^ Seed;
 
     do
@@ -61,33 +62,35 @@ void QuickSort(int* Memory, int LeftBorder, int RightBorder)
 
 }
 
-int Partition( int* Memory, int Left, int Right) // nu stiu daca avem voie cu sizeof();
+int Partition( int* Memory, int Left, int Right) 
 {
-    // Take first element as pivot for now
+   
+    int piv, i, j, rand, aux;
 
-    int piv, i, j, rand;
-
-    rand = RandomNumberGenerator(Left, Right, defaultSeed);
+    rand = RandomNumberGenerator(Left, Right, gDefaultSeed);
 
     piv = Memory[rand];
 
-    defaultSeed += '1';
+    gDefaultSeed += '1';
 
-    Swap( &piv, &Memory[Left] );
+    aux = piv;
 
-    //piv = Memory[Left];
+    piv = Memory[Left];
+
+    Memory[Left] = piv;
+
     i = Left;
     j = Right;
 
     while (i < j)
     {
         i++;
-        while (piv > Memory[i])
+        while (piv < Memory[i])
         {
             i++;
         }
 
-        while (j >= Left && piv < Memory[j])
+        while (j >= Left && piv > Memory[j])
         {
             j--;
         }
@@ -137,3 +140,19 @@ int CustomStrCmp( char*s1, char*s2 )
     return ( *p1 > *p2 ) - ( *p2  > *p1 );
 }
 
+
+int CustomIntMemSet( int* Source, int Value, size_t Count )
+{
+
+    if ( NULL == Source )
+    {
+        return -1;
+    }
+
+    for( size_t i = 0; i < Count; i++ )
+    {
+        Source[i] = Value;
+    }
+
+    return 0;
+}

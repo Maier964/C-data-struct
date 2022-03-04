@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include "ccvector.h"
 
 typedef struct _NODE{
     int Value;
@@ -44,19 +45,22 @@ int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value);
 int TreeGetNthInorder(CC_TREE *Tree, int Index, int *Value);
 int TreeGetNthPostorder(CC_TREE *Tree, int Index, int *Value);
 
-
+// Rotation used for balancing the tree
 int TreeLeftRotate( PCC_TREE Tree, PNODE SupportNode );
 
+// Rotation used for balancing the tree
 int TreeRightRotate(PCC_TREE Tree, PNODE SupportNode  );
 
+// Auxiliary function that allocates memory for a node
+// Returns -1 if invalid parameters
 int TreeNodeCreate( PNODE , int );
 
+// Function to recolour/rebalance the tree after insertion
 int TreeAdjustColourInsert( PCC_TREE, PNODE );
 
 int TreePrint( PNODE Head );
 
-int TreeReplaceSubtree( PCC_TREE, PNODE, PNODE );
-
+// Searches for a node and returns it as a parameter
 int TreeGetNode( PCC_TREE, int, PNODE* );
 
 int TreePredecesor( PNODE, PNODE* );
@@ -65,7 +69,7 @@ int TreeAdjustColourRemove( PCC_TREE, PNODE , PNODE, bool);
 
 int TreeGetHeightAux( PNODE );
 
-// Comment
+// Used to recursively deallocate all nodes
 void TreeClearAux(PNODE);
 
 int TestRB( PCC_TREE );
@@ -73,3 +77,10 @@ int TestRB( PCC_TREE );
 int GetRBHeight( PNODE );
 
 int CheckRedCondition( PNODE );
+
+// Used to create vector of preoder traversal..
+int PreoderAux( PNODE, PCC_VECTOR );
+
+int PostorderAux( PNODE, PCC_VECTOR );
+
+int InorderAux( PNODE, PCC_VECTOR );

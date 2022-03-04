@@ -5,16 +5,14 @@
 
 #include "cchashtable.h"
 #include "common.h"
-//for memset
 #include <string.h>
 
 
-#define INITIAL_SIZE ((int)2.4593e4)
+#define INITIAL_SIZE ((int)9.8317e4)
 
 #define H 64
 
-int expansionPrimeNrs[4] = { (int)4.9157e4 ,
-(int)9.8317e4 ,(int)1.96613e5 , (int)3.93241e5 }; 
+int expansionPrimeNrs[2] = { (int)1.96613e5 , (int)3.93241e5 }; 
 
 int HashDefaultFunction( char* Key)
 {
@@ -28,7 +26,7 @@ int HashDefaultFunction( char* Key)
     int hash = 0;
 
     for ( int i = 0; i < len; i++ )
-    {   // What happens if you want a bigger hash table? Ans : Change macro or allocate another function, not the default one
+    {   
         hash = (hash + ( Key[i] - 'a' + 1 ) * pow) % INITIAL_SIZE;
         pow = (pow * 31) % INITIAL_SIZE;
     }
@@ -72,10 +70,6 @@ int HtCreate(CC_HASH_TABLE **HashTable)
 
     hashTableTemplate->Buckets = (CC_HASH_ITEM*)malloc(INITIAL_SIZE * sizeof(CC_HASH_ITEM));
 
-    // Initialising everything to -1 is no longer required,
-    // as we dont use that default value anywhere
-//    memset( hashTableTemplate->Buckets->Value, -1, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
-//    memset( hashTableTemplate->Buckets->Key, NULL, INITIAL_SIZE * sizeof(CC_HASH_ITEM) );
 
     for (int i = 0; i < INITIAL_SIZE; i++)
     {
@@ -105,12 +99,11 @@ int HtDestroy(CC_HASH_TABLE **HashTable)
         return -1;
     }
 
-    PCC_HASH_TABLE temp = *HashTable;
+    HtClear( *HashTable );
 
-    free(temp->Buckets);
- //   free(temp->HashFunction);
+    free((*HashTable)->Buckets);
 
-    free(temp);
+    HashTable = NULL;
 
     return 0;
 }
@@ -376,8 +369,6 @@ int HtGetNextKey(CC_HASH_TABLE_ITERATOR *Iterator, char **Key)
         return -2;
     }
 
-    // Again.. Search for something more efficient.. 
-    // Maybe add an array of hash items and these will be the only populated items? idk
 
     for ( int i = Iterator->CurrentIndex; i < Iterator->HashTable->Count; i++ )
     {
@@ -418,6 +409,7 @@ int HtClear(CC_HASH_TABLE *HashTable)
     {
         return -1;
     }
+
 
     free(HashTable->Buckets);
 
@@ -507,8 +499,9 @@ int HtInsertNeighbourhoodAux( PCC_HASH_TABLE HashTable, int headBucket, int blan
 
         }
 
-        LOG_ERROR( "Hash table at is full. Size is %d Expanding.. ", HashTable->Size );
-        // EXPAND HashTable... Imd, nu mai am chef acum..
+        LOG_ERROR( "Hash table at is full. Size is %d. Expanding.. ", HashTable->Size );
+        
+        HtExpand( HashTable, expansionPrimeNrs[ HashTable->TimesExpanded ] );
 
         return 0;
     }
@@ -533,6 +526,8 @@ int HtExpand( PCC_HASH_TABLE HashTable, int newSize )
         LOG_ERROR("Hash table at expansion failed at %p", HashTable);
         return -1;
     }
+
+    // Should have removed every item from the first hash and introduced it in a second hash... :c
 
     HashTable->Buckets = hashTblAux;
 

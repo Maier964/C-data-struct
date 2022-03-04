@@ -10,9 +10,8 @@
 
 #define isBlack(x) ( (x) == NULL || (x)->Colour == BLACK )
 
-// Delete
-static int notOkRed = 0;
-
+// Used for checking if tree is RB
+static int gNotOkRed = 0;
 
 int TreeCreate(CC_TREE **Tree)
 {
@@ -80,6 +79,7 @@ int TreeInsert(CC_TREE *Tree, int Value)
     }
     else
     {
+        // Treat RB insertion as normal BST insertion
         nodeIterator = Tree->Head;
 
         while( nodeIterator != NULL )
@@ -91,16 +91,14 @@ int TreeInsert(CC_TREE *Tree, int Value)
             else GO_LEFT(nodeIterator);
         }
 
-        // Found address of new node. We also got his parent with the help of nodeParent
+        // Found address of new node. Make link to his parent
 
         node->Parent = nodeParent;
 
-        // Added 
         if ( nodeParent == NULL )
         {
             Tree->Head = node;
         }
-        //
 
         if ( nodeParent->Value > Value )
         {
@@ -129,8 +127,6 @@ int TreeInsert(CC_TREE *Tree, int Value)
 
 int TreeRemove(CC_TREE *Tree, int Value)
 {
-    // Avand doar value ca reprezentant si fiind posibile duplicate, ii cam ciudat de facut removal-ul pentru ca 
-    // removal-ul va sterge cea mai apropiata valoare din cele duplicate. 
 
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Value);
@@ -138,7 +134,6 @@ int TreeRemove(CC_TREE *Tree, int Value)
     PNODE nodeToBeDel = NULL;
     PNODE nodeDeleteIterator = NULL;
     PNODE nodeAux = NULL;
-    //bool originalColour;
     PNODE nodeParentAux = NULL;
 
     if ( TreeGetNode( Tree, Value, &nodeToBeDel ) != 1 )
@@ -314,7 +309,70 @@ void TreeClearAux( PNODE Head )
     TreeClearAux( Head->Right );
 
     free(Head);
+
+    // Added this
+    Head = NULL;
     
+}
+
+
+int PostorderAux( PNODE Node, PCC_VECTOR Vec )
+{
+    
+    if ( Node == NULL )
+    {
+        return -1;
+    }
+
+    if ( Vec == NULL )
+    {
+        return -1;
+    }
+
+    VecInsertTail( Vec, Node->Value );
+    PostorderAux( Node->Left, Vec );
+    PostorderAux( Node->Right, Vec );
+
+    return 0;
+}
+
+int PreorderAux( PNODE Node, PCC_VECTOR Vec )
+{
+    if ( Node == NULL )
+    {
+        return -1;
+    }
+
+    if ( Vec == NULL )
+    {
+        return -1;
+    }
+
+    VecInsertTail( Vec, Node->Value );
+    PreorderAux( Node->Left, Vec );
+    PreorderAux( Node->Right, Vec );
+
+    return 0;
+}
+
+int InorderAux( PNODE Node, PCC_VECTOR Vec )
+{
+    
+    if ( Node == NULL )
+    {
+        return -1;
+    }
+
+    if ( Vec == NULL )
+    {
+        return -1;
+    }
+
+    InorderAux( Node->Left, Vec );
+    VecInsertTail( Vec, Node->Value );
+    InorderAux( Node->Right, Vec );
+
+    return 0;
 }
 
 int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value)
@@ -322,6 +380,9 @@ int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value)
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Index);
     CC_UNREFERENCED_PARAMETER(Value);
+
+    // Wasting memory with this approach but I have no time left for implementing iterative traversal
+    PCC_VECTOR vec = NULL;
 
     if ( NULL == Tree )
     {
@@ -332,6 +393,14 @@ int TreeGetNthPreorder(CC_TREE *Tree, int Index, int *Value)
     {
         return -1;
     }
+    
+    VecCreate( &vec );
+
+    PreorderAux( Tree->Head, vec );
+
+    *Value = vec->Array[ Index - 1 ];
+
+    VecDestroy( &vec );
 
     return 0;
 }
@@ -341,7 +410,28 @@ int TreeGetNthInorder(CC_TREE *Tree, int Index, int *Value)
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Index);
     CC_UNREFERENCED_PARAMETER(Value);
-    return -1;
+
+    PCC_VECTOR vec = NULL;
+
+    if ( NULL == Tree )
+    {
+        return -1;
+    }
+
+    if ( Index > Tree->Count )
+    {
+        return -1;
+    }
+    
+    VecCreate( &vec );
+
+    InorderAux( Tree->Head, vec );
+
+    *Value = vec->Array[ Index - 1 ];
+
+    VecDestroy( &vec );
+
+    return 0;
 }
 
 int TreeGetNthPostorder(CC_TREE *Tree, int Index, int *Value)
@@ -349,7 +439,30 @@ int TreeGetNthPostorder(CC_TREE *Tree, int Index, int *Value)
     CC_UNREFERENCED_PARAMETER(Tree);
     CC_UNREFERENCED_PARAMETER(Index);
     CC_UNREFERENCED_PARAMETER(Value);
-    return -1;
+
+    PCC_VECTOR vec = NULL;
+
+    if ( NULL == Tree )
+    {
+        return -1;
+    }
+
+    if ( Index > Tree->Count )
+    {
+        return -1;
+    }
+    
+    VecCreate( &vec );
+
+    PostorderAux( Tree->Head, vec );
+
+    *Value = vec->Array[ Index - 1 ];
+
+    VecDestroy( &vec );
+
+    vec = NULL;
+
+    return 0;
 }
 
 
@@ -430,6 +543,11 @@ int TreeRightRotate( PCC_TREE Tree, PNODE Source )
 int TreeNodeCreate( PNODE Node, int Value )
 {
 
+    if( Node == NULL )
+    {
+        return -1;
+    }
+
     Node->Value = Value;
     Node->Colour = RED; // Inserted nodes are red by default.
     Node->Left = Node->Right = Node->Parent = NULL;
@@ -441,9 +559,7 @@ int TreeNodeCreate( PNODE Node, int Value )
 
 int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
 {
-    // This function is only accesed in RBInsert where we already perform this check, 
-    // but this function can be accesed independently if some memory overflow is present in the program,
-    // so double-checking is advised. (is this relevant????? "Double-check" before commiting to this comment)
+    
     if ( NULL == Tree )
     {
         return -1;
@@ -460,8 +576,9 @@ int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
         if ( Node->Parent == Node->Parent->Parent->Left )
         {
             nodeIterator = Node->Parent->Parent->Right;
-            if ( nodeIterator != NULL &&  nodeIterator->Colour == RED ) // patched this with first condition
+            if ( nodeIterator != NULL &&  nodeIterator->Colour == RED ) 
             {
+                // Case 1 Uncle is red
                 Node->Parent->Colour = BLACK;
                 nodeIterator->Colour = BLACK;
                 Node->Parent->Parent->Colour = RED;
@@ -471,10 +588,13 @@ int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
             {
                 if ( Node == Node->Parent->Right )
                 {
+                    // Case 2 Uncle is black and node is right child( includes Case 3 
+                    // because we need to perform a double rotation
                     Node = Node->Parent;
                     TreeLeftRotate( Tree, Node );
                 }
 
+                // Case 3 Uncle is black and node is left child
                 Node->Parent->Colour = BLACK;
 
                 Node->Parent->Parent->Colour = RED;
@@ -485,7 +605,7 @@ int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
         else 
         { // Same idea but inversed direction
             nodeIterator = Node->Parent->Parent->Left;
-            if (nodeIterator != NULL && nodeIterator->Colour == RED ) // patched this aswell
+            if (nodeIterator != NULL && nodeIterator->Colour == RED )
             {
                 Node->Parent->Colour = BLACK;
                 nodeIterator->Colour = BLACK;
@@ -518,7 +638,7 @@ int TreeAdjustColourInsert( PCC_TREE Tree, PNODE Node )
 
 int TreePrint( PNODE Head )
 {
-    // DO a simple preorder for now..
+    // Simple preorder used for lazy debugging before implementing the CheckRB function
 
     if (Head == NULL)
     {
@@ -569,37 +689,36 @@ int TreeGetNode( PCC_TREE Tree, int Value, PNODE* node )
 }
 
 
-int TreeReplaceSubtree( PCC_TREE Tree, PNODE Source, PNODE Subtree )
-{
+// int TreeReplaceSubtree( PCC_TREE Tree, PNODE Source, PNODE Subtree )
+// {
 
-    if ( Source->Parent == NULL )
-    {
-        Tree->Head = Subtree;
-    }
-    else
-    {
-        if ( Source == Source->Parent->Left )
-        {
-            Source->Parent->Left = Subtree;
-        }
-        else
-        {
-            Source->Parent->Right = Subtree;
-        } 
-    } 
+//     if ( Source->Parent == NULL )
+//     {
+//         Tree->Head = Subtree;
+//     }
+//     else
+//     {
+//         if ( Source == Source->Parent->Left )
+//         {
+//             Source->Parent->Left = Subtree;
+//         }
+//         else
+//         {
+//             Source->Parent->Right = Subtree;
+//         } 
+//     } 
 
-    // AICI E BUBA!!!
-    if (Subtree != NULL)
-    {
-        Subtree->Parent = Source->Parent;
-    }
+//     if (Subtree != NULL)
+//     {
+//         Subtree->Parent = Source->Parent;
+//     }
      
 
-    return 0;
-}
+//     return 0;
+// }
 
 
-int TreePredecesor( PNODE Node, PNODE* Predecesor ) // This is actually successor of x.. We try to find the predecesor of x->right which is the successor of x.
+int TreePredecesor( PNODE Node, PNODE* Predecesor ) 
 {
     if ( NULL == Node )
     {
@@ -631,17 +750,20 @@ int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node, PNODE NodeParent, bool isL
         return -1;
     }
 
-    // Continue from here tomorrow. Hopefully you remember
+    // Implemented RB removal without NIL sentinels... wrost decision of my life
+    // Need 2 additional parameters to keep track of pointer relationships when Node is NULL
+
     PNODE sibling = NULL;
 
 
     while( Node != Tree->Head && isBlack(Node)  )
     {
         if ( isLeft )
-        {
+        {   
             sibling = NodeParent->Right;
             if ( sibling->Colour == RED )
             {
+                // Case 1
                 sibling->Colour = BLACK;
                 NodeParent->Colour = RED;
                 TreeLeftRotate( Tree, NodeParent );
@@ -650,6 +772,7 @@ int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node, PNODE NodeParent, bool isL
 
             if ( isBlack(sibling->Left)  && isBlack(sibling->Right) )
             {
+                // Case 2
                 sibling->Colour = RED;
                 Node = NodeParent;
                 NodeParent = Node->Parent;
@@ -659,13 +782,17 @@ int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node, PNODE NodeParent, bool isL
             {
                 if ( isBlack( sibling->Right ) )
                 {
+                    // Case 3
                     sibling->Left->Colour = BLACK;
                     sibling->Colour = RED;
                     TreeRightRotate( Tree, sibling );
                     sibling = NodeParent->Right;
                 }
 
+                // Case 4
+
                 sibling->Colour = NodeParent->Colour;
+
                 NodeParent->Colour = BLACK;
 
                 if ( sibling->Right != NULL )
@@ -678,7 +805,7 @@ int TreeAdjustColourRemove(PCC_TREE Tree, PNODE Node, PNODE NodeParent, bool isL
             }
         }
         else
-        // isLeft = False; symmetric
+        // symmetric
         {
             sibling = NodeParent->Left;
             if ( sibling->Colour == RED )
@@ -739,22 +866,22 @@ int TestRB( PCC_TREE Root )
 
     if ( Root->Head->Colour != BLACK )
     {
-        printf("\nNot RB!! Condition 1 is wrong omggg....");
+        printf("\nNot RB!! Condition 1 is wrong....");
         return 0;
     }
 
     if ( GetRBHeight( Root->Head ) == 0 )
     {
         printf("%d ", GetRBHeight(Root->Head->Right) - GetRBHeight(Root->Head->Right));
-        printf("\nNot RB!! Condition 2 is wrong omggg....");
+        printf("\nNot RB!! Condition 2 is wrong....");
         return 0;
     }
 
     CheckRedCondition( Root->Head );
 
-    if ( notOkRed != 0 )
+    if ( gNotOkRed != 0 )
     {
-        printf("\nNot RB!! Condition 3 is wrong omggg....");
+        printf("\nNot RB!! Condition 3 is wrong....");
         return 0;
     }
 
@@ -804,7 +931,7 @@ int CheckRedCondition( PNODE Node )
         if ( (Node->Left!= NULL && Node->Left->Colour != BLACK)
          || (Node->Right!= NULL && Node->Right->Colour != BLACK) )
         {
-            notOkRed++;
+            gNotOkRed++;
         }
     }
     else

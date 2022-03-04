@@ -1,8 +1,6 @@
 #include "ccheap.h"
 #include "common.h"
 
-#define __STDC_WANT_LIB_EXT1__ 1
-
 
 int HpCreateMaxHeap(CC_HEAP **MaxHeap, CC_VECTOR* InitialElements)
 {
@@ -132,8 +130,7 @@ int HpRemove(CC_HEAP *Heap, int Value)
         return -1;
     }
 
-    // This could be improved, its a bit ugly since Count is dinamically modified in the for loop
-    // It shouldn't be a problem though
+    // This could be improved, its a bit ugly since Count is dynamically modified in the for loop
     for( int i = 0; i < Heap->Elements->Count; i++ )
     {
         if ( Heap->Elements->Array[i] == Value )
@@ -155,8 +152,6 @@ int HpGetExtreme(CC_HEAP *Heap, int* ExtremeValue)
 {
     CC_UNREFERENCED_PARAMETER(Heap);
     CC_UNREFERENCED_PARAMETER(ExtremeValue);
-
-    // Should it return the value or put it in param? Confusing requirements..
 
     if ( NULL == Heap || NULL == ExtremeValue )
     {
@@ -207,6 +202,8 @@ int HpSortToVector(CC_HEAP *Heap, CC_VECTOR* SortedVector)
     CC_UNREFERENCED_PARAMETER(Heap);
     CC_UNREFERENCED_PARAMETER(SortedVector);
 
+    int* reallocVec = NULL;
+
     // Assume SortedVector is initialised
     if ( NULL == Heap || SortedVector == NULL )
     {
@@ -225,7 +222,14 @@ int HpSortToVector(CC_HEAP *Heap, CC_VECTOR* SortedVector)
     else
     // Make sure there's enough space in the vector ( Realloc )
     {
-        ;
+        reallocVec = realloc( SortedVector->Array, Heap->Elements->Count * sizeof(int) );
+
+        if ( reallocVec == NULL )
+        {
+            return -1;
+        }
+
+        SortedVector->Array = reallocVec;
     }
     
 

@@ -9,7 +9,7 @@
 #define RIGHT(x) 2*x+2
 #define PARENT(x) (x-1)/2
 
-// Do some crazy things in here to determine with ternary if the element exists in memory
+
 #define LEFT_ELEMENT(x) Heap->Elements->\
 Array[ LEFT(x) ]
 #define RIGHT_ELEMENT(x) Heap->Elements->\
@@ -54,5 +54,5 @@ int HpSortToVector(CC_HEAP *Heap, CC_VECTOR* SortedVector);
 int Heapify( PCC_HEAP Heap, int Index );
 
 // Opposide of heapify. Makes exchanges in a bottom-up fashion to 
-// assure the heap proprieties.
+// grant the heap properties.
 int Swim( PCC_HEAP Heap, int Index );

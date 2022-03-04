@@ -1,6 +1,6 @@
 #include "ccvector.h"
 #include "common.h"
-#include <string.h> // for memset
+#include <string.h>
 
 #define INITIAL_SIZE    100
 
@@ -22,8 +22,6 @@ int VecCreate(CC_VECTOR** Vector)
         return -1;
     }
 
-
-    // Can we use memset?
     memset(vec, 0, sizeof(*vec));
 
     vec->Count = 0;
@@ -76,13 +74,11 @@ int VecInsertTail(CC_VECTOR* Vector, int Value)
     if (Vector->Count + 1 == Vector->Size)
     {
         /// REALLOC
-        /// Use an aux to store the vector pointer
         /// Allow an additonal (10% * size) slots every time array exceeds size.
         aux = realloc(Vector->Array, (Vector->Size + (10* Vector->Size ) / 100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
-//           printf("Realloc succesful");
             Vector->Size += (10 * Vector->Size) / 100;
         }
         else
@@ -111,12 +107,10 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
     if (Vector->Count + 1 >= Vector->Size)
     {
         /// REALLOC 
-        /// Use an aux to store the vector pointer
         aux = realloc(Vector->Array, (Vector->Size+ (10* Vector->Size ) / 100) * sizeof(int));
         if (NULL != aux)
         {
             Vector->Array = aux;
-            //printf("Realloc succesful");
             Vector->Size+=((10* Vector->Size ) / 100);
         }
         else
@@ -126,7 +120,6 @@ int VecInsertHead(CC_VECTOR* Vector, int Value)
         }
     }
 
-    // This is not okay, when vector size increases a lot, it will override the last element.. Implement it differently omg how dumb
     for (int i = ++Vector->Count; i > 0; i--)
     {
         Vector->Array[i] = Vector->Array[i-1];
@@ -180,8 +173,7 @@ int VecInsertAfterIndex(CC_VECTOR* Vector, int Index, int Value) // This functio
 }
 
 int VecRemoveByIndex(CC_VECTOR* Vector, int Index)
-{
-    // Index vs position discussion. Index should start at 0 while position starts at 1? 
+{ 
 
     CC_UNREFERENCED_PARAMETER(Vector);
     CC_UNREFERENCED_PARAMETER(Index);
@@ -238,6 +230,7 @@ int VecGetValueByIndex(CC_VECTOR* Vector, int Index, int* Value)
 int VecGetCount(CC_VECTOR* Vector)
 {
     CC_UNREFERENCED_PARAMETER(Vector);
+
     if (NULL == Vector)
     {
         return -1;
@@ -250,20 +243,32 @@ int VecClear(CC_VECTOR* Vector)
 {
     CC_UNREFERENCED_PARAMETER(Vector);
 
+    int* auxRealloc = NULL;
+
     if (NULL == Vector)
     {
-        return -1; // Nothing to clear
+        // Nothing to clear
+        return -1; 
     }
 
-    // Question : Can we use memset?
-    memset(Vector->Array, 0, Vector->Count * sizeof(int));
+    CustomIntMemSet(Vector->Array, 0, Vector->Count );
 
 
     // Reset initial size
-    Vector->Size = INITIAL_SIZE; // + Realloc 
+    Vector->Size = INITIAL_SIZE; 
+
+    // Realloc
+    auxRealloc = realloc( Vector->Array, INITIAL_SIZE * sizeof(int) );
+
+    if ( auxRealloc == NULL )
+    {
+        LOG_ERROR("Realloc failed at %p", auxRealloc);
+        return -1;
+    }
+
+    Vector->Array = auxRealloc;
+
     Vector->Count = 0;
-
-
 
 
     return 0;
@@ -273,20 +278,17 @@ int VecSort(CC_VECTOR* Vector)
 {
     CC_UNREFERENCED_PARAMETER(Vector);
 
-    // Implement QuickSort
-
     QuickSort(Vector->Array, 0, Vector->Count - 1);
 
     return 0;
 }
 
-int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) // Needs to be tested
+int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) 
 {
     CC_UNREFERENCED_PARAMETER(DestVector);
     CC_UNREFERENCED_PARAMETER(SrcVector);
 
     int* aux = NULL;
-    // int* offset = NULL;
 
     if (NULL == DestVector || NULL == SrcVector)
     {
@@ -303,14 +305,8 @@ int VecAppend(CC_VECTOR* DestVector, CC_VECTOR* SrcVector) // Needs to be tested
         return -1;
     }
 
-    // offset = DestVector->Array + sizeof(int) * DestVector->Count;
 
     // SrcVector will be appended to DestVector
-    // First parameter is the destination zone : A pointer to the end of the destination array
-    // Second parameter is the source memory area, i.e. a pointer to the first element of the source array.
-    // Third parameter is the number of bytes to be copied -> the number of ints in the source array 
-    // memcpy(offset, SrcVector->Array, sizeof(int) * SrcVector->Count); Ofc this doesnt work...
-
     for (int i = DestVector->Count; i < DestVector->Count + SrcVector->Count; i++) 
     {
         DestVector->Array[i] = SrcVector->Array[i - DestVector->Count];
@@ -345,7 +341,7 @@ int VecPrint(CC_VECTOR* Vector)
         printf("%d ", Vector->Array[i]);
     }
 
-    putchar(10); // Put a newline after the print
+    putchar(10); // Put a newline after printing
 
     return 0;
 }
